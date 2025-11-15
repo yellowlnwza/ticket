@@ -56,7 +56,7 @@ export default function AssignAdmin() {
   const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
-
+  
   // States สำหรับ Filters
   const [searchTerm, setSearchTerm] = useState("");
   const [unassignedOnly, setUnassignedOnly] = useState(false); // เริ่มต้นเป็น "Unassigned Only"
@@ -71,8 +71,8 @@ export default function AssignAdmin() {
         fetchTickets(), // เรียก API จริง
         fetchStaffList().catch(() => []), // ดึง staff list (ถ้า error ให้เป็น array ว่าง)
       ]);
-
-      setStaffList(staffData);
+      
+      setStaffList(staffList,staffData);
 
       // แปลงข้อมูลให้ตรงกับ format ที่ใช้ใน component
       const formattedTickets = ticketsData.map((ticket) => {
@@ -105,7 +105,7 @@ export default function AssignAdmin() {
     } finally {
       setLoading(false);
     }
-  }, []); // Dependency array is empty because setters are stable and don't need to be in dependencies
+  }, [staffList]); // Dependency array is empty because setters are stable and don't need to be in dependencies
 
   useEffect(() => {
     loadData();
@@ -195,15 +195,7 @@ export default function AssignAdmin() {
     },
   ];
 
-  // --- Placeholder Handler สำหรับปุ่ม Assign ---
-  const handleAssignClick = (ticketId, ticketSubject) => {
-    // TODO: Implement "Assign" logic here (e.g., open modal)
-    console.log(`Assign button clicked for Ticket ID: ${ticketId} (${ticketSubject})`);
-    // คุณอาจจะต้องส่ง state ของ staffList ไปให้ Modal ด้วย
-    // setAssignModalOpen(true);
-    // setSelectedTicket(ticketId);
-  };
-
+  
 
   if (loading) return <div className="p-8">Loading data...</div>;
   if (error) return <div className="p-8 text-red-500">{error}</div>;
@@ -366,19 +358,13 @@ export default function AssignAdmin() {
                   <td className="py-3 px-4 text-sm text-slate-700">
                     {new Date(ticket.created_at).toLocaleDateString()}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-500 flex gap-3">
+                  <td className="py-3 px-8 text-sm text-gray-500  flex gap-3">
                     <Link
                       to={`/TicketDetail/${ticket.id}`}
                       className="text-gray-500 hover:text-blue-600"
                     >
                       <Eye size={16} />
                     </Link>
-                    <button 
-                      className="hover:text-green-600"
-                      onClick={() => handleAssignClick(ticket.id, ticket.subject)}
-                    >
-                      <UserPlus size={16} />
-                    </button>
                   </td>
                 </tr>
               ))}
@@ -431,12 +417,6 @@ export default function AssignAdmin() {
                 >
                   <Eye size={16} />
                 </Link>
-                <button 
-                  className="flex items-center gap-1 hover:text-green-600"
-                  onClick={() => handleAssignClick(ticket.id, ticket.subject)}
-                >
-                  <UserPlus size={16} /> Assign
-                </button>
               </div>
             </div>
           ))}

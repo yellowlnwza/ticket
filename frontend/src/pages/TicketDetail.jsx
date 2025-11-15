@@ -309,7 +309,7 @@ export default function TicketDetail() {
                   {/* Change Status */}
                   <div>
                     <label htmlFor="status" className="block text-sm font-medium text-gray-700">Change Status</label>
-                    <div className="relative mt-1">
+                    <div className="relative">
                       <select
                         id="status"
                         className="w-full appearance-none border rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"
@@ -329,7 +329,7 @@ export default function TicketDetail() {
                   {userRole === 'admin' && (
                     <div>
                       <label htmlFor="reassign" className="block text-sm font-medium text-gray-700">Reassign Ticket</label>
-                      <div className="relative mt-1">
+                      <div className="relative ">
                         <select
                           id="reassign"
                           className="w-full appearance-none border rounded-lg px-4 py-2 pr-10 focus:outline-none focus:ring-2 focus:ring-blue-500"

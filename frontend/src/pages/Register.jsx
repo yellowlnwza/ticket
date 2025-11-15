@@ -39,7 +39,6 @@ export default function Register() {
 
   return (
     <div className="min-h-screen bg-gray-50 flex flex-col items-center justify-center py-12 px-4 sm:px-6 lg:px-8 font-sans">
-      {/* ===== Header ส่วนโลโก้ (เหมือนหน้า Login) ===== */}
       <div className="text-center mb-8">
         <div className="flex justify-center mb-4">
           <div className="bg-blue-600 p-3 rounded-xl shadow-md">
@@ -120,8 +119,6 @@ export default function Register() {
                 >
                     <option value="" disabled>Select Role</option>
                     <option value="enduser">End User</option>
-                    <option value="staff">Staff</option>
-                    <option value="admin">Admin</option>
                 </select>
                 {/* ลูกศร Dropdown Custom */}
                 <div className="absolute inset-y-0 right-0 flex items-center px-4 pointer-events-none">

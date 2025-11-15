@@ -226,7 +226,7 @@ export default function DashboardAdmin() {
                   <td className="py-3 px-4 text-sm text-slate-700">
                     {ticket.updated_at ? new Date(ticket.updated_at).toLocaleDateString() : 'N/A'}
                   </td>
-                  <td className="py-3 px-4 text-sm text-gray-500 flex gap-3">
+                  <td className="py-3 px-8 text-sm text-gray-500 flex gap-3">
                     <Link 
                       to={`/TicketDetail/${ticket.id}`} 
                       className="hover:text-blue-600"
