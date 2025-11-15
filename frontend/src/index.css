@@ -1,0 +1,16 @@
+/* The following directives require Tailwind CSS and PostCSS processing.
+   Make sure your build setup includes Tailwind CSS and PostCSS.
+*/
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+html, body, #root {
+  height: 100%;
+  margin: 0;
+  padding: 0;
+  font-family: 'Inter', sans-serif;
+  background-color: #ececec; 
+}
+
+
