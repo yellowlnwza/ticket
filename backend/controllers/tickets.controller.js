@@ -9,16 +9,13 @@ const path = require('path');
 // สร้าง Ticket ใหม่
 exports.createTicket = async (req, res) => {
   try {
-    console.log("Uploaded file:", req.file); // <-- ใส่บรรทัดนี้
     const { title, description, priority, due_date } = req.body;
-    const attachment = req.file ? `/uploads/${req.file.filename}` : null;
 
     const ticket = await Ticket.create({
       title,
       description,
       priority,
       status: "Open",
-      attachment,
       user_id: req.user.user_id,
       due_date: due_date || null,
     });
@@ -93,7 +90,6 @@ exports.getTicketById = async (req, res) => {
       created_at: ticket.created_at,
       updated_at: ticket.updated_at,
       creator: ticket.creator || null,
-      attachment: ticket.attachment || null, 
       comments: (ticket.Comments || []).map(c => ({
         id: c.comment_id,
         author: c.User ? c.User.name : 'Unknown',

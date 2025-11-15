@@ -33,10 +33,8 @@ export const fetchTickets = (params = {}) =>
     return data.tickets || data || [];
   });
 
-export const createTicket = (payload, isForm = false) => {
-  // If payload is FormData, don't set Content-Type (browser will set it with boundary)
-  const headers = isForm && payload instanceof FormData ? {} : {};
-  return instance.post("/tickets", payload, { headers });
+export const createTicket = (payload) => {
+  return instance.post("/tickets", payload);
 };
 
 
@@ -131,6 +129,25 @@ export const fetchStaffList = () =>
     const data = res.data || {};
     return data.staff || data.users || data || [];
   });
+
+// User Management (Admin only)
+export const fetchAllUsers = () =>
+  instance.get("/users").then((res) => {
+    const data = res.data || {};
+    return data.users || [];
+  });
+
+export const createUser = (userData) =>
+  instance.post("/users", userData).then((res) => res.data);
+
+export const updateUser = (userId, userData) =>
+  instance.put(`/users/${userId}`, userData).then((res) => res.data);
+
+export const deleteUser = (userId) =>
+  instance.delete(`/users/${userId}`).then((res) => res.data);
+
+export const toggleUserStatus = (userId) =>
+  instance.put(`/users/${userId}/status`).then((res) => res.data);
 
   
 export default instance;

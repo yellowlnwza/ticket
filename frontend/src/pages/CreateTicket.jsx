@@ -6,20 +6,18 @@ export default function CreateTicket() {
   const [title, setTitle] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("Low");
-  const [file, setFile] = useState(null);
   const navigate = useNavigate();
 
   async function handleSubmit(e) {
     e.preventDefault();
      try {
-      // ✅ ใช้ FormData เพื่อส่งไฟล์และข้อมูลอื่น ๆ ไป backend
-      const formData = new FormData();
-      formData.append("title", title);
-      formData.append("description", description);
-      formData.append("priority", priority);
-      if (file) formData.append("attachment", file);
+      const ticketData = {
+        title,
+        description,
+        priority
+      };
       
-      await createTicket(formData, true); // ส่งไป API (isForm = true สำหรับ FormData)
+      await createTicket(ticketData);
       alert("สร้าง Ticket สำเร็จ");
       navigate("/TicketList");
     } catch (err) {
@@ -65,12 +63,6 @@ export default function CreateTicket() {
       <option>High</option>
     </select>
   </div>
-
- <input
-  type="file"
-  name="attachment" // ต้องตรงกับ multer.single("attachment")
-  onChange={(e) => setFile(e.target.files[0])}
-/>
 
   <button
     type="submit"

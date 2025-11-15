@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ChevronDown, Upload, X } from 'lucide-react';
+import { ChevronDown } from 'lucide-react';
 import { createTicket } from '../services/api';
 
 
@@ -13,39 +13,18 @@ export default function SubNewTicket() {
   const [subject, setSubject] = useState("");
   const [description, setDescription] = useState("");
   const [priority, setPriority] = useState("Medium"); // ค่าเริ่มต้น
-  const [file, setFile] = useState(null); // เพิ่ม state สำหรับไฟล์
-  const [fileName, setFileName] = useState(""); // สำหรับแสดงชื่อไฟล์
-
-  const handleFileChange = (e) => {
-    const selectedFile = e.target.files[0];
-    if (selectedFile) {
-      setFile(selectedFile);
-      setFileName(selectedFile.name);
-    }
-  };
-
-  const handleRemoveFile = () => {
-    setFile(null);
-    setFileName("");
-    // Reset file input
-    const fileInput = document.getElementById('file-input');
-    if (fileInput) fileInput.value = '';
-  };
 
   const handleSubmit = async (e) => {
     e.preventDefault();
     setLoading(true);
     try {
-      // ใช้ FormData เมื่อมีไฟล์ หรือไม่มีไฟล์ก็ใช้ได้
-      const formData = new FormData();
-      formData.append("title", subject);
-      formData.append("description", description);
-      formData.append("priority", priority);
-      if (file) {
-        formData.append("attachment", file);
-      }
+      const ticketData = {
+        title: subject,
+        description: description,
+        priority: priority
+      };
       
-      await createTicket(formData, true); // ส่ง FormData
+      await createTicket(ticketData);
       
       alert("Ticket submitted successfully!");
       navigate("/DashboardUser"); // กลับไปหน้า Dashboard User
@@ -132,51 +111,6 @@ export default function SubNewTicket() {
                 </select>
                 <ChevronDown size={18} className="absolute right-4 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
               </div>
-            </div>
-
-            {/* File Attachment */}
-            <div>
-              <label htmlFor="file-input" className="block text-sm font-medium text-gray-700 mb-2">
-                Attachment (Optional)
-              </label>
-              {!file ? (
-                <label
-                  htmlFor="file-input"
-                  className="flex flex-col items-center justify-center w-full h-32 border-2 border-gray-300 border-dashed rounded-lg cursor-pointer bg-gray-50 hover:bg-gray-100 transition"
-                >
-                  <div className="flex flex-col items-center justify-center pt-5 pb-6">
-                    <Upload size={32} className="text-gray-400 mb-2" />
-                    <p className="mb-2 text-sm text-gray-500">
-                      <span className="font-semibold">Click to upload</span> or drag and drop
-                    </p>
-                    <p className="text-xs text-gray-500">PNG, JPG, PDF, DOCX (MAX. 10MB)</p>
-                  </div>
-                  <input
-                    id="file-input"
-                    type="file"
-                    className="hidden"
-                    onChange={handleFileChange}
-                    accept="image/*,.pdf,.doc,.docx"
-                  />
-                </label>
-              ) : (
-                <div className="flex items-center justify-between p-3 bg-gray-50 border border-gray-200 rounded-lg">
-                  <div className="flex items-center gap-3">
-                    <Upload size={20} className="text-blue-600" />
-                    <span className="text-sm text-gray-700 font-medium">{fileName}</span>
-                  </div>
-                  <button
-                    type="button"
-                    onClick={handleRemoveFile}
-                    className="p-1 text-red-600 hover:text-red-700 hover:bg-red-50 rounded transition"
-                  >
-                    <X size={18} />
-                  </button>
-                </div>
-              )}
-              <p className="text-xs text-gray-400 mt-1">
-                You can attach screenshots, documents, or other files related to your issue.
-              </p>
             </div>
           </div>
 

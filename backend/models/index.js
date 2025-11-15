@@ -5,9 +5,8 @@ const User = require('./user')(sequelize);
 const Role = require('./role')(sequelize);
 const Ticket = require('./ticket')(sequelize);
 const Comment = require('./comment')(sequelize);
-const Attachment = require('./attachment')(sequelize);
 const Sla = require('./sla')(sequelize);
-const Notification = require('./notification')(sequelize, Sequelize.DataTypes); // ✅ เพิ่มแบบนี้
+const Notification = require('./notification')(sequelize, Sequelize.DataTypes);
 
 // Associations
 
@@ -27,10 +26,6 @@ Comment.belongsTo(User, { foreignKey: 'user_id' });
 Ticket.hasMany(Comment, { foreignKey: 'ticket_id' });
 Comment.belongsTo(Ticket, { foreignKey: 'ticket_id' });
 
-// Ticket - Attachment
-Ticket.hasMany(Attachment, { foreignKey: 'ticket_id' });
-Attachment.belongsTo(Ticket, { foreignKey: 'ticket_id' });
-
 // Ticket - Sla
 Ticket.hasOne(Sla, { foreignKey: 'ticket_id' });
 
@@ -38,4 +33,4 @@ Ticket.hasOne(Sla, { foreignKey: 'ticket_id' });
 Ticket.belongsTo(User, { foreignKey: 'assigned_to', as: 'assignee' });
 
 // Export ทุก model ออกไปพร้อมกัน
-module.exports = { sequelize, User, Role, Ticket, Comment, Attachment, Sla, Notification };
+module.exports = { sequelize, User, Role, Ticket, Comment, Sla, Notification };

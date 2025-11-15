@@ -8,7 +8,6 @@ module.exports = (sequelize) => {
     priority: { type: DataTypes.ENUM('Low','Medium','High'), defaultValue: 'Medium' },
     status: { type: DataTypes.ENUM('Open','In Progress','Resolved','Closed'), defaultValue: 'Open' },
     assigned_to: { type: DataTypes.INTEGER, allowNull: true },
-    attachment: { type: DataTypes.STRING, allowNull: true },
     created_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW },
     updated_at: { type: DataTypes.DATE, defaultValue: DataTypes.NOW }
   }, 

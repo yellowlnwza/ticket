@@ -3,7 +3,6 @@ const express = require('express');
 const router = express.Router();
 const auth = require('../middlewares/auth.middleware');
 const requireRole = require('../middlewares/role.middleware');
-const upload = require('../middlewares/upload.middleware');
 
 const { 
   createTicket, 
@@ -28,7 +27,7 @@ const {
 router.use(auth);
 
 // ✅ สร้าง Ticket (All authenticated users can create tickets)
-router.post('/', upload.single('attachment'), createTicket);
+router.post('/', createTicket);
 
 // ✅ ดึงสถิติสำหรับ dashboard (All authenticated users)
 router.get('/stats', getStats);

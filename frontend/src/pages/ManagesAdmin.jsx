@@ -9,20 +9,7 @@ import {
   X, // ไอคอนปิด Modal
 } from "lucide-react";
 import { Dialog, Transition } from "@headlessui/react"; // สำหรับ Modal
-
-// --- (จำลอง) API Call ---
-// คุณต้องแก้ส่วนนี้ให้เรียก API จริงจาก Backend ของคุณ
-const fetchUsers = async () => {
-  // จำลองการดึงข้อมูล
-  return [
-    { id: 1, name: "John Doe", email: "john.doe@company.com", role: "End User", status: "Active", created_at: "2025-01-15T10:00:00Z" },
-    { id: 2, name: "Sarah Staff", email: "sarah.staff@company.com", role: "Support Staff", status: "Active", created_at: "2025-01-10T11:00:00Z" },
-    { id: 3, name: "Admin User", email: "admin@company.com", role: "Administrator", status: "Active", created_at: "2025-01-10T12:00:00Z" },
-    { id: 4, name: "Jane Smith", email: "jane.smith@company.com", role: "End User", status: "Active", created_at: "2025-02-01T13:00:00Z" },
-    { id: 5, name: "Tom Tech", email: "tom.tech@company.com", role: "Support Staff", status: "Active", created_at: "2025-01-20T14:00:00Z" },
-    { id: 6, name: "Emily Davis", email: "emily.davis@company.com", role: "End User", status: "Suspended", created_at: "2025-02-15T15:00:00Z" },
-  ];
-};
+import { fetchAllUsers, createUser, updateUser, deleteUser, toggleUserStatus } from "../services/api";
 
 // --- Helper Components (สำหรับ Tag สีๆ) ---
 const RoleTag = ({ role }) => {
@@ -56,6 +43,9 @@ export default function ManagesAdmin() {
 
   // --- (สำคัญ) State สำหรับ Modal Add User ---
   const [isModalOpen, setIsModalOpen] = useState(false);
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
+  const [editingUser, setEditingUser] = useState(null);
+  
   // State สำหรับฟอร์มใน Modal
   const [newUser, setNewUser] = useState({
     name: "",
@@ -65,16 +55,26 @@ export default function ManagesAdmin() {
     confirmPassword: "",
   });
 
+  // State สำหรับ Edit Modal
+  const [editUser, setEditUser] = useState({
+    name: "",
+    email: "",
+    role: "End User",
+    password: "",
+    confirmPassword: "",
+  });
+
   // --- ดึงข้อมูล Users ตอนเริ่ม ---
   useEffect(() => {
     const loadUsers = async () => {
       try {
         setLoading(true);
-        const data = await fetchUsers(); // <-- เรียก API จริงตรงนี้
+        setError(null);
+        const data = await fetchAllUsers();
         setUsers(data);
       } catch (err) {
-        console.error("Failed to load users:", err); 
-        setError("Failed to load users");
+        console.error("Failed to load users:", err);
+        setError("Failed to load users. Please try again.");
       } finally {
         setLoading(false);
       }
@@ -107,20 +107,128 @@ export default function ManagesAdmin() {
     setNewUser(prev => ({ ...prev, [name]: value }));
   };
 
-  const handleAddNewUser = (e) => {
+  const handleAddNewUser = async (e) => {
     e.preventDefault();
     if (newUser.password !== newUser.confirmPassword) {
       alert("Passwords do not match!");
       return;
     }
-    // ส่งข้อมูล newUser ไปยัง API ของคุณตรงนี้
-    console.log("Adding new user:", newUser);
-    // TODO: เรียก API (await addUserApi(newUser))
-    
-    // (จำลอง) เพิ่ม User ใหม่เข้าไปใน List
-    setUsers(prev => [...prev, { ...newUser, id: Date.now(), status: "Active", created_at: new Date().toISOString() }]);
 
-    closeModal(); // ปิด Modal เมื่อเสร็จ
+    try {
+      const response = await createUser({
+        name: newUser.name,
+        email: newUser.email,
+        role: newUser.role,
+        password: newUser.password
+      });
+
+      if (response.success && response.user) {
+        // เพิ่ม User ใหม่เข้าไปใน List
+        setUsers(prev => [response.user, ...prev]);
+        closeModal();
+        alert("User created successfully!");
+      }
+    } catch (err) {
+      console.error("Error creating user:", err);
+      alert(err.response?.data?.message || "Failed to create user. Please try again.");
+    }
+  };
+
+  const handleEditUser = (user) => {
+    setEditingUser(user);
+    setEditUser({
+      name: user.name,
+      email: user.email,
+      role: user.role,
+      password: "",
+      confirmPassword: "",
+    });
+    setIsEditModalOpen(true);
+  };
+
+  const closeEditModal = () => {
+    setIsEditModalOpen(false);
+    setEditingUser(null);
+    setEditUser({ name: "", email: "", role: "End User", password: "", confirmPassword: "" });
+  };
+
+  const handleEditFormChange = (e) => {
+    const { name, value } = e.target;
+    setEditUser(prev => ({ ...prev, [name]: value }));
+  };
+
+  const handleUpdateUser = async (e) => {
+    e.preventDefault();
+    
+    if (editUser.password && editUser.password !== editUser.confirmPassword) {
+      alert("Passwords do not match!");
+      return;
+    }
+
+    try {
+      const updateData = {
+        name: editUser.name,
+        email: editUser.email,
+        role: editUser.role,
+      };
+
+      // Only include password if it's provided
+      if (editUser.password) {
+        updateData.password = editUser.password;
+      }
+
+      const response = await updateUser(editingUser.id, updateData);
+
+      if (response.success && response.user) {
+        // อัปเดต user ใน list
+        setUsers(prev => prev.map(user => 
+          user.id === editingUser.id ? response.user : user
+        ));
+        closeEditModal();
+        alert("User updated successfully!");
+      }
+    } catch (err) {
+      console.error("Error updating user:", err);
+      alert(err.response?.data?.message || "Failed to update user. Please try again.");
+    }
+  };
+
+  const handleDeleteUser = async (userId) => {
+    if (!window.confirm("Are you sure you want to delete this user?")) {
+      return;
+    }
+
+    try {
+      const response = await deleteUser(userId);
+      if (response.success) {
+        setUsers(prev => prev.filter(user => user.id !== userId));
+        alert("User deleted successfully!");
+      }
+    } catch (err) {
+      console.error("Error deleting user:", err);
+      alert(err.response?.data?.message || "Failed to delete user. Please try again.");
+    }
+  };
+
+  const handleBlockUser = async (user) => {
+    const action = user.status === 'Active' ? 'block' : 'unblock';
+    if (!window.confirm(`Are you sure you want to ${action} this user?`)) {
+      return;
+    }
+
+    try {
+      const response = await toggleUserStatus(user.id);
+      if (response.success && response.user) {
+        // อัปเดต user ใน list
+        setUsers(prev => prev.map(u => 
+          u.id === user.id ? response.user : u
+        ));
+        alert(response.message || `User ${action}ed successfully!`);
+      }
+    } catch (err) {
+      console.error("Error toggling user status:", err);
+      alert(err.response?.data?.message || `Failed to ${action} user. Please try again.`);
+    }
   };
   // --- จบ Functions สำหรับ Modal ---
 
@@ -202,9 +310,27 @@ export default function ManagesAdmin() {
                   <td className="py-3 px-4 text-sm"><StatusTag status={user.status} /></td>
                   <td className="py-3 px-4 text-sm text-slate-700">{new Date(user.created_at).toLocaleDateString()}</td>
                   <td className="py-3 px-4 text-sm text-gray-500 flex gap-3">
-                    <button className="hover:text-blue-600"><Edit size={16} /></button>
-                    <button className="hover:text-yellow-600"><ShieldOff size={16} /></button>
-                    <button className="hover:text-red-600"><Trash2 size={16} /></button>
+                    <button 
+                      onClick={() => handleEditUser(user)}
+                      className="hover:text-blue-600"
+                      title="Edit User"
+                    >
+                      <Edit size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleBlockUser(user)}
+                      className="hover:text-yellow-600"
+                      title="Block User"
+                    >
+                      <ShieldOff size={16} />
+                    </button>
+                    <button 
+                      onClick={() => handleDeleteUser(user.id)}
+                      className="hover:text-red-600"
+                      title="Delete User"
+                    >
+                      <Trash2 size={16} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -229,9 +355,24 @@ export default function ManagesAdmin() {
               </div>
               {/* Row 3: Actions */}
               <div className="flex gap-4 text-gray-600">
-                <button className="flex items-center gap-1 hover:text-blue-600"><Edit size={16} /> Edit</button>
-                <button className="flex items-center gap-1 hover:text-yellow-600"><ShieldOff size={16} /> Block</button>
-                <button className="flex items-center gap-1 hover:text-red-600"><Trash2 size={16} /> Delete</button>
+                <button 
+                  onClick={() => handleEditUser(user)}
+                  className="flex items-center gap-1 hover:text-blue-600"
+                >
+                  <Edit size={16} /> Edit
+                </button>
+                <button 
+                  onClick={() => handleBlockUser(user)}
+                  className="flex items-center gap-1 hover:text-yellow-600"
+                >
+                  <ShieldOff size={16} /> Block
+                </button>
+                <button 
+                  onClick={() => handleDeleteUser(user.id)}
+                  className="flex items-center gap-1 hover:text-red-600"
+                >
+                  <Trash2 size={16} /> Delete
+                </button>
               </div>
             </div>
           ))}
@@ -357,6 +498,135 @@ export default function ManagesAdmin() {
                         className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
                       >
                         Save User
+                      </button>
+                    </div>
+                  </form>
+                </Dialog.Panel>
+              </Transition.Child>
+            </div>
+          </div>
+        </Dialog>
+      </Transition>
+
+      {/* --- (สำคัญ) Modal สำหรับ Edit User --- */}
+      <Transition appear show={isEditModalOpen} as={Fragment}>
+        <Dialog as="div" className="relative z-50" onClose={closeEditModal}>
+          <Transition.Child
+            as={Fragment}
+            enter="ease-out duration-300"
+            enterFrom="opacity-0"
+            enterTo="opacity-100"
+            leave="ease-in duration-200"
+            leaveFrom="opacity-100"
+            leaveTo="opacity-0"
+          >
+            <div className="fixed inset-0 bg-black bg-opacity-40" />
+          </Transition.Child>
+
+          <div className="fixed inset-0 overflow-y-auto">
+            <div className="flex min-h-full items-center justify-center p-4 text-center">
+              <Transition.Child
+                as={Fragment}
+                enter="ease-out duration-300"
+                enterFrom="opacity-0 scale-95"
+                enterTo="opacity-100 scale-100"
+                leave="ease-in duration-200"
+                leaveFrom="opacity-100 scale-100"
+                leaveTo="opacity-0 scale-95"
+              >
+                <Dialog.Panel className="w-full max-w-md transform overflow-hidden rounded-2xl bg-white p-6 text-left align-middle shadow-xl transition-all">
+                  <Dialog.Title
+                    as="h3"
+                    className="text-lg font-bold leading-6 text-slate-800 flex justify-between items-center"
+                  >
+                    Edit User
+                    <button onClick={closeEditModal} className="text-gray-400 hover:text-gray-600">
+                      <X size={20} />
+                    </button>
+                  </Dialog.Title>
+                  
+                  <form onSubmit={handleUpdateUser} className="mt-4 space-y-4">
+                    {/* Full Name */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Full Name</label>
+                      <input
+                        type="text"
+                        name="name"
+                        value={editUser.name}
+                        onChange={handleEditFormChange}
+                        className="mt-1 w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    {/* Email */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Email</label>
+                      <input
+                        type="email"
+                        name="email"
+                        value={editUser.email}
+                        onChange={handleEditFormChange}
+                        className="mt-1 w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      />
+                    </div>
+                    {/* Role */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">Role</label>
+                      <select
+                        name="role"
+                        value={editUser.role}
+                        onChange={handleEditFormChange}
+                        className="mt-1 w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        required
+                      >
+                        <option value="End User">End User</option>
+                        <option value="Support Staff">Support Staff</option>
+                        <option value="Administrator">Administrator</option>
+                      </select>
+                    </div>
+                    {/* Password (Optional) */}
+                    <div>
+                      <label className="block text-sm font-medium text-gray-700">
+                        New Password <span className="text-gray-500 text-xs">(Leave blank to keep current password)</span>
+                      </label>
+                      <input
+                        type="password"
+                        name="password"
+                        value={editUser.password}
+                        onChange={handleEditFormChange}
+                        className="mt-1 w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                        placeholder="Enter new password (optional)"
+                      />
+                    </div>
+                    {/* Confirm Password (Only if password is provided) */}
+                    {editUser.password && (
+                      <div>
+                        <label className="block text-sm font-medium text-gray-700">Confirm New Password</label>
+                        <input
+                          type="password"
+                          name="confirmPassword"
+                          value={editUser.confirmPassword}
+                          onChange={handleEditFormChange}
+                          className="mt-1 w-full border rounded-lg p-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+                          placeholder="Confirm new password"
+                        />
+                      </div>
+                    )}
+
+                    <div className="mt-6 flex justify-end gap-3">
+                      <button
+                        type="button"
+                        className="px-4 py-2 text-sm font-medium text-gray-700 bg-gray-100 rounded-lg hover:bg-gray-200"
+                        onClick={closeEditModal}
+                      >
+                        Cancel
+                      </button>
+                      <button
+                        type="submit"
+                        className="px-4 py-2 text-sm font-medium text-white bg-blue-600 rounded-lg hover:bg-blue-700"
+                      >
+                        Update User
                       </button>
                     </div>
                   </form>
