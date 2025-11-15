@@ -9,28 +9,28 @@ IT-SUPPORT_TICKET/
 |   |   └── database.js 
 |   |── controllers/
 |   |   ├── auth.controller.js
-|   |   └── tickets.controller.js
+|   |   ├── tickets.controller.js
+|   |   └── users.controller.js
 |   ├── middlewares/
 |   |   ├── auth.middleware.js
 |   |   ├── role.middleware.js
-|   |   └── upload.middleware.js
 |   ├── models/
-|   |   ├── attachment.js
 |   |   ├── comment.js
 |   |   ├── index.js
 |   |   ├── notification.js
 |   |   ├── role.js
+|   |   ├── sla.js
 |   |   ├── ticket.js
 |   |   └── user.js
 |   ├── routes/
 |   |   ├── auth.routes.js
 |   |   ├── notifications.routes.js
-|   |   └── tickets.routes.js
-|   ├── uploads/
+|   |   ├── tickets.routes.js
+|   |   └── users.routes.js
 |   ├── .env
 |   ├── app.js
 |   ├── server.js
-|   └── tesr_post_comment.js
+|   └── test_post_comment.js
 |
 ├── fontend/ 
 │   └── src/
@@ -40,24 +40,35 @@ IT-SUPPORT_TICKET/
 |       |   ├── ProtectedRoute.jsx
 |       |   └── TicketCard.jsx
 |       ├── pages/
+|       |   ├── AssignAdmin.jsx
 |       |   ├── CreateTicket.jsx
 |       |   ├── DashboardAdmin.jsx
 |       |   ├── DashboardUser.jsx
 |       |   ├── EditTicket.jsx
 |       |   ├── Login.jsx
+|       |   ├── ManagesAdmin.jsx
+|       |   ├── MyTicket.jsx
+|       |   ├── ProfileAdmin.jsx
+|       |   ├── ProfileStaff.jsx
+|       |   ├── profileUser.jsx
 |       |   ├── Register.jsx
-|       |   ├── TicketDetail.jsx
-|       |   └── TicketList.jsx
+|       |   ├── ReportAdmin.jsx
+|       |   ├── SubNewTicket.jsx
+|       |   ├── SystemSetting.jsx
+|       |   └──icketDetail.jsx
 |       ├── services/
 |       |   └── api.js
 |       ├── App.jsx
-|       └── App.css
+|       ├── App.jsx
+|       ├── index.css
+|       └── main.jsx
 |
 ├── database/
 |   ├── docker-compose.yml
 │   └── init.sql
-|             
-└── README.md
+|            
+├── index.html
+└── README_SETUP_RUN.md
 ```
 
 ## 🚀 วิธี Setup และ Run โปรเจกต์
@@ -76,6 +87,7 @@ npm run dev
 
 # run dev ใน fontend
 cd frontend
+npm install
 npm run dev
 ```
 ## เข้าหน้าเว็บ 
