@@ -74,6 +74,7 @@ export default function App() {
     <div className="min-h-screen">
       <Navbar>
         <Routes>
+          {/* Root redirect */}
           <Route 
             path="/" 
             element={
@@ -88,63 +89,46 @@ export default function App() {
               )
             } 
           />
+          
+          {/* Public routes */}
           <Route path="/login" element={<Login />} />
           <Route path="/register" element={<Register />} />
-          <Route element={<ProtectedRoute />}>
-            {(role === "admin" || role === "staff") && (
-              <>
-                <Route path="/AssignAdmin" element={<Assign />} />
-              </>
-            )}
-            {(role === "admin" || role === "staff") && (
-              <>
-                <Route path="/ReportAdmin" element={<Report />} />
-              </>
-            )}
-            {(role === "admin" || role === "staff") && (
-              <>
-                <Route path="/DashboardAdmin" element={<DashboardAdmin />} />
-              </>
-            )}
-            {(role === "admin" ) && (
-              <Route path="/ManagesAdmin" element={<Manage />} />
-            )}
-            {(role === "admin") && (
-              <Route path="/SystemSetting" element={<SysSetting />} />
-            )}
-          
-            {(role === "user") && (
-              <Route path="/SubNewTicket" element={<SubNewTic />} />
-            )}
-            {(role === "user") && (
-              <>
-                <Route path="/MyTicket" element={<MyTic />} />
-              </>
-            )}
-            
-             {(role === "user" || role === "staff" || role === "admin") && (
-              <>
-                <Route path="/TicketDetail/:id" element={<TicketDetail />} />
-              </>
-            )}
-            {(role === "user") && (
-              <Route path="/DashboardUser" element={<DashboardUser />} />
-            )}
-            {(role === "user") && (
-              <Route path="/ProfileUser" element={<ProUser/>} />
-            )}
-            {(role === "admin") && (
-              <Route path="/ProfileAdmin" element={<ProAdmin />} />
-            )}
-            {(role === "staff") && (
-              <Route path="/ProfileStaff" element={<ProStaff />} />
-            )}
-            {(role === "staff") && (
-              <Route path="/EditTicket/edit/:id" element={<EditTicket />} />
-            )}
-            
+
+          {/* Admin-only routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin"]} />}>
+            <Route path="/ManagesAdmin" element={<Manage />} />
+            <Route path="/SystemSetting" element={<SysSetting />} />
+            <Route path="/ProfileAdmin" element={<ProAdmin />} />
           </Route>
 
+          {/* Staff/Admin routes */}
+          <Route element={<ProtectedRoute allowedRoles={["admin", "staff"]} />}>
+            <Route path="/DashboardAdmin" element={<DashboardAdmin />} />
+            <Route path="/AssignAdmin" element={<Assign />} />
+            <Route path="/ReportAdmin" element={<Report />} />
+            <Route path="/EditTicket/edit/:id" element={<EditTicket />} />
+          </Route>
+
+          {/* Staff-only routes */}
+          <Route element={<ProtectedRoute allowedRoles={["staff"]} />}>
+            <Route path="/ProfileStaff" element={<ProStaff />} />
+          </Route>
+
+          {/* User-only routes */}
+          <Route element={<ProtectedRoute allowedRoles={["user"]} />}>
+            <Route path="/DashboardUser" element={<DashboardUser />} />
+            <Route path="/SubNewTicket" element={<SubNewTic />} />
+            <Route path="/MyTicket" element={<MyTic />} />
+            <Route path="/ProfileUser" element={<ProUser />} />
+          </Route>
+
+          {/* All authenticated users can access */}
+          <Route element={<ProtectedRoute />}>
+            <Route path="/TicketDetail/:id" element={<TicketDetail />} />
+            <Route path="/CreateTicket" element={<CreateTicket />} />
+          </Route>
+
+          {/* 404 - redirect to home */}
           <Route path="*" element={<Navigate to="/" replace />} />
         </Routes>
       </Navbar>

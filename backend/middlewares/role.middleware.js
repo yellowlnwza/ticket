@@ -1,11 +1,28 @@
-module.exports = (allowedRoles=[]) => {
+// Role-based access control middleware
+// Usage: requireRole([2, 3]) - allows Staff (2) and Admin (3)
+//        requireRole([3]) - allows only Admin (3)
+//        requireRole([1, 2, 3]) - allows all roles
+module.exports = (allowedRoles = []) => {
   return (req, res, next) => {
-    if (!req.user) return res.status(401).json({ message: 'No user' });
-    // allowedRoles as array of role names or role_ids depending on implementation.
-    // If allowedRoles contains role names, map role_id -> name first.
+    if (!req.user) {
+      return res.status(401).json({ message: 'Unauthorized: No user found' });
+    }
+
     const userRoleId = req.user.role_id;
-    // assume allowedRoles are role_ids for simplicity:
-    if (!allowedRoles.includes(userRoleId)) return res.status(403).json({ message: 'Forbidden' });
+    
+    if (!allowedRoles.includes(userRoleId)) {
+      return res.status(403).json({ 
+        success: false,
+        message: 'Forbidden: Insufficient permissions' 
+      });
+    }
+
     next();
   };
 };
+
+// Helper function for common role checks
+module.exports.requireAdmin = () => module.exports([3]);
+module.exports.requireStaff = () => module.exports([2, 3]);
+module.exports.requireStaffOrAdmin = () => module.exports([2, 3]);
+module.exports.requireUser = () => module.exports([1, 2, 3]); // All authenticated users
