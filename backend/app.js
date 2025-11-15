@@ -9,6 +9,7 @@ const { sequelize } = require("./models");
 const authRoutes = require("./routes/auth.routes");
 const ticketRoutes = require("./routes/tickets.routes");
 const notificationRoutes = require('./routes/notifications.routes');
+const userRoutes = require('./routes/users.routes');
 
 const app = express();
 const server = http.createServer(app);
@@ -61,6 +62,7 @@ app.use("/uploads", express.static("uploads"));
 app.use("/api/auth", authRoutes);
 app.use("/api/tickets", ticketRoutes);
 app.use('/api/notifications', notificationRoutes);
+app.use('/api/users', userRoutes);
 
 // ✅ Debug route
 app.get("/api/debug", async (req, res) => {

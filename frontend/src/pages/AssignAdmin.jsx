@@ -53,7 +53,7 @@ export default function AssignAdmin() {
   const location = useLocation();
   // const [stats] = useState({ totalTickets: 0, unassigned: 0, assigned: 0, criticalUnassigned: 0 }); // ❌ ลบตัวนี้
   const [tickets, setTickets] = useState([]);
-  const [setStaffList] = useState([]);
+  const [staffList, setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -78,7 +78,7 @@ export default function AssignAdmin() {
       const formattedTickets = ticketsData.map((ticket) => {
         // หาชื่อ assignee จาก staffList
         const assigneeName = ticket.assigned_to
-          ? staffData.find((s) => s.id === ticket.assigned_to)?.name ||
+          ? staffData.find((s) => s.id === ticket.assigned_to || s.user_id === ticket.assigned_to)?.name ||
             "Unknown"
           : null;
 
@@ -105,7 +105,7 @@ export default function AssignAdmin() {
     } finally {
       setLoading(false);
     }
-  }, [setLoading, setStaffList, setTickets, setError]); // <-- Dependency array ของ useCallback ว่าง เพราะใช้แค่ set... และ fetch...
+  }, []); // Dependency array is empty because setters are stable and don't need to be in dependencies
 
   useEffect(() => {
     loadData();
