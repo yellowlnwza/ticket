@@ -33,10 +33,7 @@ CREATE TABLE IF NOT EXISTS users (
   password_hash VARCHAR(255) NOT NULL,
   role_id INT NOT NULL DEFAULT 1,
   status ENUM('Active', 'Suspended') NOT NULL DEFAULT 'Active',
-  phone_number VARCHAR(20) NULL,
-  department VARCHAR(100) NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
-  updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (role_id) REFERENCES roles(role_id) ON DELETE RESTRICT,
   INDEX idx_users_email (email),
   INDEX idx_users_role (role_id),
@@ -45,10 +42,10 @@ CREATE TABLE IF NOT EXISTS users (
 
 -- Insert default users
 -- Password สำหรับทุก user: 12345678
-INSERT IGNORE INTO users (user_id, name, email, password_hash, role_id, status, department) VALUES
-(1, 'Administrator', 'admin@gmail.com', '$2b$10$Oh43MJIc9eQlSAouZuxxpeGuedQNSGXwzHzWYRO2shvMj8Lv2ccJS', 3, 'Active', 'IT'),
-(2, 'IT Staff', 'staff@gmail.com', '$2b$10$BwlVqHJi8SWned1gixN3I.U/tKDT5h2yaJGkMJ9iRTWw3I2m6Clp6', 2, 'Active', 'IT'),
-(3, 'Test User', 'user@gmail.com', '$2b$10$2S/70sCDJrw5F9ENOUN8ceicHhP5mdDRCJFuzEozm6G9g8914/sWG', 1, 'Active', 'Operations');
+INSERT IGNORE INTO users (user_id, name, email, password_hash, role_id, status) VALUES
+(1, 'Administrator', 'admin@gmail.com', '$2b$10$Oh43MJIc9eQlSAouZuxxpeGuedQNSGXwzHzWYRO2shvMj8Lv2ccJS', 3, 'Active'),
+(2, 'IT Staff', 'staff@gmail.com', '$2b$10$BwlVqHJi8SWned1gixN3I.U/tKDT5h2yaJGkMJ9iRTWw3I2m6Clp6', 2, 'Active'),
+(3, 'Test User', 'user@gmail.com', '$2b$10$2S/70sCDJrw5F9ENOUN8ceicHhP5mdDRCJFuzEozm6G9g8914/sWG', 1, 'Active');
 
 -- ====================
 -- สร้างตาราง Tickets
@@ -60,9 +57,7 @@ CREATE TABLE IF NOT EXISTS tickets (
   description TEXT NOT NULL,
   priority ENUM('Low', 'Medium', 'High') DEFAULT 'Medium',
   status ENUM('Open', 'In Progress', 'Resolved', 'Closed') DEFAULT 'Open',
-  category ENUM('Hardware', 'Software', 'Network', 'Account', 'Other') DEFAULT 'Other',
   assigned_to INT NULL,
-  due_date DATETIME NULL,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
@@ -97,7 +92,7 @@ CREATE TABLE IF NOT EXISTS notifications (
   notification_id INT AUTO_INCREMENT PRIMARY KEY,
   user_id INT NOT NULL,
   message TEXT NOT NULL,
-  is_read BOOLEAN DEFAULT FALSE,
+  is_read TINYINT(1) 0,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   FOREIGN KEY (user_id) REFERENCES users(user_id) ON DELETE CASCADE,
   INDEX idx_notifications_user_id (user_id),
@@ -114,11 +109,10 @@ CREATE TABLE IF NOT EXISTS slas (
   response_time INT NULL COMMENT 'เวลาตอบกลับ (นาที)',
   resolution_time INT NULL COMMENT 'เวลาแก้ไข (นาที)',
   due_by DATETIME NULL,
-  breached BOOLEAN DEFAULT FALSE,
+  breached BOOLEAN NOT NULL DEFAULT FALSE,
   created_at DATETIME DEFAULT CURRENT_TIMESTAMP,
   updated_at DATETIME DEFAULT CURRENT_TIMESTAMP ON UPDATE CURRENT_TIMESTAMP,
   FOREIGN KEY (ticket_id) REFERENCES tickets(ticket_id) ON DELETE CASCADE,
-  UNIQUE KEY unique_ticket_sla (ticket_id)
 ) ENGINE=InnoDB DEFAULT CHARSET=utf8mb4 COLLATE=utf8mb4_unicode_ci;
 
 -- ====================
