@@ -1,6 +1,6 @@
-import React, { useEffect, useState, useMemo } from "react";
+import React, { useEffect, useState, useMemo, useCallback } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { fetchTickets } from "../services/api";
+import { fetchTickets, fetchStaffList } from "../services/api";
 import {
   Search,
   ChevronDown,
@@ -12,7 +12,6 @@ import {
   XCircle,
 } from "lucide-react";
 
-
 // --- Helper Components (สำหรับ Tag สีๆ) ---
 const PriorityTag = ({ priority }) => {
   const styles = {
@@ -20,7 +19,15 @@ const PriorityTag = ({ priority }) => {
     Medium: "bg-yellow-100 text-yellow-700",
     Low: "bg-green-100 text-green-700",
   };
-  return <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[priority]}`}>{priority}</span>;
+  return (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${
+        styles[priority] || "bg-gray-100 text-gray-700"
+      }`}
+    >
+      {priority}
+    </span>
+  );
 };
 
 const StatusTag = ({ status }) => {
@@ -30,15 +37,23 @@ const StatusTag = ({ status }) => {
     Resolved: "bg-green-100 text-green-700",
     Closed: "bg-gray-100 text-gray-700",
   };
-  return <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}>{status}</span>;
+  return (
+    <span
+      className={`px-3 py-1 rounded-full text-xs font-medium ${
+        styles[status] || "bg-gray-100 text-gray-700"
+      }`}
+    >
+      {status}
+    </span>
+  );
 };
 // --- จบ Helper Components ---
 
-
 export default function AssignAdmin() {
   const location = useLocation();
-  const [stats] = useState({ totalTickets: 0, unassigned: 0, assigned: 0, criticalUnassigned: 0 });
+  // const [stats] = useState({ totalTickets: 0, unassigned: 0, assigned: 0, criticalUnassigned: 0 }); // ❌ ลบตัวนี้
   const [tickets, setTickets] = useState([]);
+  const [setStaffList] = useState([]);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
 
@@ -49,16 +64,24 @@ export default function AssignAdmin() {
   const [statusFilter, setStatusFilter] = useState("All");
 
   // --- ดึงข้อมูลตอนเริ่ม ---
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     try {
       setLoading(true);
-      const ticketsData = await fetchTickets(); // เรียก API จริง
-      
+      const [ticketsData, staffData] = await Promise.all([
+        fetchTickets(), // เรียก API จริง
+        fetchStaffList().catch(() => []), // ดึง staff list (ถ้า error ให้เป็น array ว่าง)
+      ]);
+
+      setStaffList(staffData);
+
       // แปลงข้อมูลให้ตรงกับ format ที่ใช้ใน component
-      const formattedTickets = ticketsData.map(ticket => {
-        // ใช้ชื่อ assignee จาก API (ถ้ามี) หรือ fallback เป็น null
-        const assigneeName = ticket.assignee?.name || null;
-        
+      const formattedTickets = ticketsData.map((ticket) => {
+        // หาชื่อ assignee จาก staffList
+        const assigneeName = ticket.assigned_to
+          ? staffData.find((s) => s.id === ticket.assigned_to)?.name ||
+            "Unknown"
+          : null;
+
         return {
           id: ticket.id || ticket.ticket_id,
           ticket_id: `TKT-${ticket.id || ticket.ticket_id}`,
@@ -68,10 +91,10 @@ export default function AssignAdmin() {
           priority: ticket.priority,
           status: ticket.status,
           assigned_to: ticket.assigned_to, // user_id
-          assignee: assigneeName, // ชื่อ assignee สำหรับแสดงผล (มาจาก API)
+          assignee: assigneeName, // ✅ [FIXED] แก้ไขจาก ssigned
           created_by: ticket.creator?.name || "Unknown",
           updated_at: ticket.updated_at || ticket.created_at,
-          created_at: ticket.created_at
+          created_at: ticket.created_at,
         };
       });
       setTickets(formattedTickets);
@@ -82,57 +105,105 @@ export default function AssignAdmin() {
     } finally {
       setLoading(false);
     }
-  };
+  }, [setLoading, setStaffList, setTickets, setError]); // <-- Dependency array ของ useCallback ว่าง เพราะใช้แค่ set... และ fetch...
 
   useEffect(() => {
     loadData();
-  }, [location.pathname]);
+  }, [loadData, location.pathname]);
 
   // --- ฟัง event เมื่อมีการ assign ticket ---
   useEffect(() => {
     const handleTicketAssigned = () => {
       // Refresh ข้อมูลเมื่อมีการ assign ticket
+      console.log("Event 'ticketAssigned' received, refreshing data...");
       loadData();
     };
 
     // ฟัง custom event 'ticketAssigned'
-    window.addEventListener('ticketAssigned', handleTicketAssigned);
-    
+    window.addEventListener("ticketAssigned", handleTicketAssigned); // ✅ [FIXED] แก้ไขชื่อ Event
+
     // ฟังเมื่อ window ได้ focus (เมื่อกลับมาหน้า AssignAdmin)
     const handleFocus = () => {
-      if (location.pathname === '/AssignAdmin') {
+      if (location.pathname === "/AssignAdmin") {
+        console.log("Window focused, refreshing data...");
         loadData();
       }
     };
-    window.addEventListener('focus', handleFocus);
+    window.addEventListener("focus", handleFocus);
 
     return () => {
-      window.removeEventListener('ticketAssigned', handleTicketAssigned);
-      window.removeEventListener('focus', handleFocus);
+      window.removeEventListener("ticketAssigned", handleTicketAssigned); // ✅ [FIXED] แก้ไขชื่อ Event
+      window.removeEventListener("focus", handleFocus);
     };
-  }, [location.pathname]);
+  }, [location.pathname, loadData]); // ✅ [FIXED] เพิ่ม loadData
 
   // --- Logic การ Filter ---
   const filteredTickets = useMemo(() => {
     return tickets.filter((ticket) => {
-      const matchesSearch = ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
+      const matchesSearch =
+        ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ticket.ticket_id.toLowerCase().includes(searchTerm.toLowerCase());
-      
-      const matchesUnassigned = !unassignedOnly || !ticket.assigned_to; // (ถ้า unassignedOnly = true, ต้องไม่มี assigned_to)
-      const matchesPriority = priorityFilter === "All" || ticket.priority === priorityFilter;
-      const matchesStatus = statusFilter === "All" || ticket.status === statusFilter;
 
-      return matchesSearch && matchesUnassigned && matchesPriority && matchesStatus;
+      const matchesUnassigned = !unassignedOnly || !ticket.assigned_to; // (ถ้า unassignedOnly = true, ต้องไม่มี assigned_to)
+      const matchesPriority =
+        priorityFilter === "All" || ticket.priority === priorityFilter;
+      const matchesStatus =
+        statusFilter === "All" || ticket.status === statusFilter;
+
+      return (
+        matchesSearch && matchesUnassigned && matchesPriority && matchesStatus
+      );
     });
   }, [tickets, searchTerm, unassignedOnly, priorityFilter, statusFilter]);
 
+  // --- 🌟 [IMPROVEMENT] Logic การคำนวณ Stats ---
+  const stats = useMemo(() => {
+    const unassigned = tickets.filter((t) => !t.assigned_to).length;
+    const criticalUnassigned = tickets.filter(
+      (t) => !t.assigned_to && t.priority === "High"
+    ).length;
+
+    return {
+      totalTickets: tickets.length,
+      unassigned: unassigned,
+      assigned: tickets.length - unassigned,
+      criticalUnassigned: criticalUnassigned,
+    };
+  }, [tickets]); // คำนวณใหม่ทุกครั้งที่ 'tickets' เปลี่ยน
+
   // --- Stat Cards (ดีไซน์ใหม่) ---
   const statCards = [
-    { key: "totalTickets", label: "Total Tickets", icon: <Ticket size={24} className="text-blue-500" /> },
-    { key: "unassigned", label: "Unassigned", icon: <Clock size={24} className="text-yellow-500" /> },
-    { key: "assigned", label: "Assigned", icon: <CheckCircle size={24} className="text-green-500" /> },
-    { key: "criticalUnassigned", label: "Critical Unassigned", icon: <XCircle size={24} className="text-red-500" /> },
+    {
+      key: "totalTickets",
+      label: "Total Tickets",
+      icon: <Ticket size={24} className="text-blue-500" />,
+    },
+    {
+      key: "unassigned",
+      label: "Unassigned",
+      icon: <Clock size={24} className="text-yellow-500" />,
+    },
+    {
+      key: "assigned",
+      label: "Assigned",
+      icon: <CheckCircle size={24} className="text-green-500" />,
+    },
+    {
+      key: "criticalUnassigned",
+      label: "Critical Unassigned",
+      icon: <XCircle size={24} className="text-red-500" />,
+    },
   ];
+
+  // --- Placeholder Handler สำหรับปุ่ม Assign ---
+  const handleAssignClick = (ticketId, ticketSubject) => {
+    // TODO: Implement "Assign" logic here (e.g., open modal)
+    console.log(`Assign button clicked for Ticket ID: ${ticketId} (${ticketSubject})`);
+    // คุณอาจจะต้องส่ง state ของ staffList ไปให้ Modal ด้วย
+    // setAssignModalOpen(true);
+    // setSelectedTicket(ticketId);
+  };
+
 
   if (loading) return <div className="p-8">Loading data...</div>;
   if (error) return <div className="p-8 text-red-500">{error}</div>;
@@ -167,7 +238,10 @@ export default function AssignAdmin() {
       <div className="mb-4">
         {/* Search */}
         <div className="relative mb-4">
-          <Search size={18} className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400" />
+          <Search
+            size={18}
+            className="absolute left-3 top-1/2 -translate-y-1/2 text-gray-400"
+          />
           <input
             type="text"
             placeholder="Search tickets..."
@@ -188,7 +262,10 @@ export default function AssignAdmin() {
               <option value="true">Unassigned Only</option>
               <option value="false">All Tickets</option>
             </select>
-            <ChevronDown size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <ChevronDown
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
           {/* Priority Filter */}
           <div className="relative">
@@ -202,7 +279,10 @@ export default function AssignAdmin() {
               <option value="Medium">Medium</option>
               <option value="Low">Low</option>
             </select>
-            <ChevronDown size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <ChevronDown
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
           {/* Status Filter */}
           <div className="relative">
@@ -217,46 +297,88 @@ export default function AssignAdmin() {
               <option value="Resolved">Resolved</option>
               <option value="Closed">Closed</option>
             </select>
-            <ChevronDown size={18} className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none" />
+            <ChevronDown
+              size={18}
+              className="absolute right-3 top-1/2 -translate-y-1/2 text-gray-400 pointer-events-none"
+            />
           </div>
         </div>
       </div>
 
       {/* --- ตาราง / Card List --- */}
       <div className="bg-white rounded-lg shadow-sm">
-        
-        <p className="p-4 text-sm font-semibold text-slate-600">Tickets ({filteredTickets.length})</p>
+        <p className="p-4 text-sm font-semibold text-slate-600">
+          Tickets ({filteredTickets.length})
+        </p>
 
         {/* Desktop Table (ซ่อนบนมือถือ) */}
         <div className="overflow-x-auto hidden md:block">
           <table className="w-full text-left">
             <thead className="border-b bg-gray-50">
               <tr>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Ticket ID</th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Subject</th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Priority</th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Status</th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Created By</th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Assignee</th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Created</th>
-                <th className="py-3 px-4 text-sm font-semibold text-gray-600">Actions</th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Ticket ID
+                </th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Subject
+                </th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Priority
+                </th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Status
+                </th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Created By
+                </th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Assignee
+                </th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Created
+                </th>
+                <th className="py-3 px-4 text-sm font-semibold text-gray-600">
+                  Actions
+                </th>
               </tr>
             </thead>
             <tbody>
-              {filteredTickets.map(ticket => (
+              {filteredTickets.map((ticket) => (
                 <tr key={ticket.id} className="border-b hover:bg-gray-50">
-                  <td className="py-3 px-4 text-sm font-semibold text-blue-600">{ticket.ticket_id}</td>
-                  <td className="py-3 px-4 text-sm text-slate-700">{ticket.subject}</td>
-                  <td className="py-3 px-4 text-sm"><PriorityTag priority={ticket.priority} /></td>
-                  <td className="py-3 px-4 text-sm"><StatusTag status={ticket.status} /></td>
-                  <td className="py-3 px-4 text-sm text-slate-700">{ticket.created_by}</td>
-                  <td className="py-3 px-4 text-sm text-slate-700">{ticket.assignee || "Unassigned"}</td>
-                  <td className="py-3 px-4 text-sm text-slate-700">{new Date(ticket.created_at).toLocaleDateString()}</td>
+                  <td className="py-3 px-4 text-sm font-semibold text-blue-600">
+                    {ticket.ticket_id}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-slate-700">
+                    {ticket.subject}
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    <PriorityTag priority={ticket.priority} />
+                  </td>
+                  <td className="py-3 px-4 text-sm">
+                    <StatusTag status={ticket.status} />
+                  </td>
+                  <td className="py-3 px-4 text-sm text-slate-700">
+                    {ticket.created_by}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-slate-700">
+                    {ticket.assignee || "Unassigned"}
+                  </td>
+                  <td className="py-3 px-4 text-sm text-slate-700">
+                    {new Date(ticket.created_at).toLocaleDateString()}
+                  </td>
                   <td className="py-3 px-4 text-sm text-gray-500 flex gap-3">
-                    <Link to={`/TicketDetail/${ticket.id}`} className="text-gray-500 hover:text-blue-600">
+                    <Link
+                      to={`/TicketDetail/${ticket.id}`}
+                      className="text-gray-500 hover:text-blue-600"
+                    >
                       <Eye size={16} />
                     </Link>
-                    <button className="hover:text-green-600"><UserPlus size={16} /></button>
+                    <button 
+                      className="hover:text-green-600"
+                      onClick={() => handleAssignClick(ticket.id, ticket.subject)}
+                    >
+                      <UserPlus size={16} />
+                    </button>
                   </td>
                 </tr>
               ))}
@@ -266,12 +388,16 @@ export default function AssignAdmin() {
 
         {/* Mobile Card List (แสดงบนมือถือ) */}
         <div className="block md:hidden">
-          {filteredTickets.map(ticket => (
+          {filteredTickets.map((ticket) => (
             <div key={ticket.id} className="border-b p-4">
               {/* Row 1: ID, Subject */}
               <div>
-                <p className="text-sm font-semibold text-blue-600">{ticket.ticket_id}</p>
-                <p className="text-md font-semibold text-slate-800">{ticket.subject}</p>
+                <p className="text-sm font-semibold text-blue-600">
+                  {ticket.ticket_id}
+                </p>
+                <p className="text-md font-semibold text-slate-800">
+                  {ticket.subject}
+                </p>
               </div>
               {/* Row 2: Tags */}
               <div className="flex gap-2 my-3">
@@ -280,16 +406,37 @@ export default function AssignAdmin() {
               </div>
               {/* Row 3: Info */}
               <div className="text-sm text-gray-500 space-y-1">
-                <p><span className="font-medium text-slate-700">Created By:</span> {ticket.created_by}</p>
-                <p><span className="font-medium text-slate-700">Assignee:</span> <span className="text-slate-700">{ticket.assignee || "Unassigned"}</span></p>
-                <p><span className="font-medium text-slate-700">Created:</span> {new Date(ticket.created_at).toLocaleDateString()}</p>
+                <p>
+                  <span className="font-medium text-slate-700">
+                    Created By:
+                  </span>{" "}
+                  {ticket.created_by}
+                </p>
+                <p>
+                  <span className="font-medium text-slate-700">Assignee:</span>{" "}
+                  <span className="text-slate-700">
+                    {ticket.assignee || "Unassigned"}
+                  </span>
+                </p>
+                <p>
+                  <span className="font-medium text-slate-700">Created:</span>{" "}
+                  {new Date(ticket.created_at).toLocaleDateString()}
+                </p>
               </div>
               {/* Row 4: Actions */}
               <div className="flex gap-4 mt-3 pt-3 border-t text-gray-600">
-                <Link to={`/TicketDetail/${ticket.id}`} className="text-gray-500 hover:text-blue-600">
-                      <Eye size={16} />
-                    </Link>
-                <button className="flex items-center gap-1 hover:text-green-600"><UserPlus size={16} /> Assign</button>
+                <Link
+                  to={`/TicketDetail/${ticket.id}`}
+                  className="text-gray-500 hover:text-blue-600"
+                >
+                  <Eye size={16} />
+                </Link>
+                <button 
+                  className="flex items-center gap-1 hover:text-green-600"
+                  onClick={() => handleAssignClick(ticket.id, ticket.subject)}
+                >
+                  <UserPlus size={16} /> Assign
+                </button>
               </div>
             </div>
           ))}
