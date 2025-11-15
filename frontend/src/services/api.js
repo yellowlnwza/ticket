@@ -118,6 +118,9 @@ export const updateTicket = (id, data) =>
 export const fetchMonthlyStats = () =>
   instance.get("/tickets/monthly-stats").then(res => res.data);
 
+export const fetchReport = (period = 'Last 7 days') =>
+  instance.get("/tickets/report", { params: { period } }).then((res) => res.data);
+
 export const deleteTicket = (id) =>
   instance.delete(`/tickets/${id}`).then((res) => res.data);
 

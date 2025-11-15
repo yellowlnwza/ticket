@@ -93,7 +93,7 @@ export default function DashboardAdmin() {
 
   // --- Logic สำหรับ Filter ตาราง ---
   const filteredTickets = useMemo(() => {
-      return tickets.filter((ticket) => {
+      const filtered = tickets.filter((ticket) => {
         const matchesSearch =
           (ticket.subject || ticket.title || "").toLowerCase().includes(searchTerm.toLowerCase()) ||
           (ticket.ticket_id || "").toLowerCase().includes(searchTerm.toLowerCase());
@@ -102,6 +102,13 @@ export default function DashboardAdmin() {
         const matchesPriority =
           priorityFilter === "All" || ticket.priority === priorityFilter;
         return matchesSearch && matchesStatus && matchesPriority;
+      });
+      
+      // เรียงลำดับตาม ticket_id (TKT-1, TKT-2, TKT-3, ...)
+      return filtered.sort((a, b) => {
+        const aNum = parseInt(a.ticket_id.replace('TKT-', '')) || 0;
+        const bNum = parseInt(b.ticket_id.replace('TKT-', '')) || 0;
+        return aNum - bNum;
       });
     }, [tickets, searchTerm, statusFilter, priorityFilter]);
   

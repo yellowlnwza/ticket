@@ -5,7 +5,6 @@ import Login from "./pages/Login";
 import Register from "./pages/Register";
 import DashboardAdmin from "./pages/DashboardAdmin";
 import DashboardUser from "./pages/DashboardUser";
-
 import TicketDetail from "./pages/TicketDetail";
 import CreateTicket from "./pages/CreateTicket";
 import ProtectedRoute from "./Components/ProtectedRoute";
@@ -99,13 +98,13 @@ export default function App() {
             <Route path="/ManagesAdmin" element={<Manage />} />
             <Route path="/SystemSetting" element={<SysSetting />} />
             <Route path="/ProfileAdmin" element={<ProAdmin />} />
+            <Route path="/ReportAdmin" element={<Report />} />
           </Route>
 
           {/* Staff/Admin routes */}
           <Route element={<ProtectedRoute allowedRoles={["admin", "staff"]} />}>
             <Route path="/DashboardAdmin" element={<DashboardAdmin />} />
             <Route path="/AssignAdmin" element={<Assign />} />
-            <Route path="/ReportAdmin" element={<Report />} />
             <Route path="/EditTicket/edit/:id" element={<EditTicket />} />
           </Route>
 

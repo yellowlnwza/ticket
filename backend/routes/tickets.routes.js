@@ -18,7 +18,8 @@ const {
   getStatusStats,
   getMonthlyStats,
   getTicketsByPriority,
-  postComment
+  postComment,
+  getReport
   // getTicketsForUser
 } = require('../controllers/tickets.controller');
 
@@ -64,6 +65,9 @@ router.get("/list-by-priority", requireRole([2, 3]), getTicketsByPriority);
 
 // ✅ Monthly stats (Staff/Admin only)
 router.get('/monthly-stats', requireRole([2, 3]), getMonthlyStats);
+
+// ✅ Report data (Admin only)
+router.get('/report', requireRole([3]), getReport);
 
 // ✅ ดึง Ticket ตาม ID (All authenticated users - access control in controller)
 router.get('/:id', getTicketById);

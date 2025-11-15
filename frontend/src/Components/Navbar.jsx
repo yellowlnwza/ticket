@@ -118,7 +118,6 @@ export default function Navber({ children }) {
     { name: "Assign Tickets", href: "/AssignAdmin", icon: Ticket, staffOnly: true },
     { name: "My Ticket", href: "/MyTicket", icon: Ticket, userOnly: true },
     { name: "Reports", href: "/ReportAdmin", icon: FileText, adminOnly: true },
-    { name: "Reports", href: "/ReportAdmin", icon: FileText, staffOnly: true },
     { name: "System Settings", href: "/SystemSetting", icon: Settings, adminOnly: true },
     { name: "Profile", href: "/ProfileAdmin", icon: User,adminOnly: true },
     { name: "Profile", href: "/ProfileUser", icon: User,userOnly: true },

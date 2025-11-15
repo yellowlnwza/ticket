@@ -139,7 +139,7 @@ export default function AssignAdmin() {
 
   // --- Logic การ Filter ---
   const filteredTickets = useMemo(() => {
-    return tickets.filter((ticket) => {
+    const filtered = tickets.filter((ticket) => {
       const matchesSearch =
         ticket.subject.toLowerCase().includes(searchTerm.toLowerCase()) ||
         ticket.ticket_id.toLowerCase().includes(searchTerm.toLowerCase());
@@ -153,6 +153,13 @@ export default function AssignAdmin() {
       return (
         matchesSearch && matchesUnassigned && matchesPriority && matchesStatus
       );
+    });
+    
+    // เรียงลำดับตาม ticket_id (TKT-1, TKT-2, TKT-3, ...)
+    return filtered.sort((a, b) => {
+      const aNum = parseInt(a.ticket_id.replace('TKT-', '')) || 0;
+      const bNum = parseInt(b.ticket_id.replace('TKT-', '')) || 0;
+      return aNum - bNum;
     });
   }, [tickets, searchTerm, unassignedOnly, priorityFilter, statusFilter]);
 

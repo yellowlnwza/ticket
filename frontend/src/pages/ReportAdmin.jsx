@@ -19,6 +19,7 @@ import {
   CheckCircle,
   XCircle,
 } from "lucide-react";
+import { fetchReport } from '../services/api';
 
 // (สำคัญ) ลงทะเบียน Chart.js components
 ChartJS.register(
@@ -33,38 +34,16 @@ ChartJS.register(
   Legend
 );
 
-// --- (จำลอง) API Call ---
-// คุณต้องแก้ส่วนนี้ให้เรียก API จริงจาก Backend ของคุณ
 const fetchReportData = async (period) => {
-  console.log(`Fetching data for: ${period}`);
-  // จำลองการดึงข้อมูล
-  return {
-    stats: {
-      totalTickets: 6,
-      totalChange: "+12%",
-      openTickets: 2,
-      openSubtitle: "Needs attention",
-      resolved: 1,
-      resolvedChange: "+8%",
-      closed: 1,
-      closedSubtitle: "Completed",
-    },
-    statusChart: {
-      labels: ["Open", "In Progress", "Resolved", "Closed"],
-      data: [2, 2, 1, 1],
-      colors: ["#3b82f6", "#f59e0b", "#22c55e", "#6b7280"],
-    },
-    priorityChart: {
-      labels: ["Critical", "High", "Medium", "Low"],
-      data: [1, 2, 2, 1],
-    },
-    timeChart: {
-      labels: ["Mon", "Tue", "Wed", "Thu", "Fri", "Sat", "Sun"],
-      data: [5, 4, 6, 3, 5, 6, 4],
-    },
-  };
+  try {
+    const data = await fetchReport(period);
+    return data;
+  } catch (error) {
+    console.error('Error fetching report data:', error);
+    throw error;
+  }
 };
-// --- จบ (จำลอง) API Call ---
+// --- จบ API Call ---
 
 // --- (ใหม่) Component กราฟ Status (สำหรับจอมือถือ) ---
 const StatusChartMobileView = ({ data, colors, labels }) => {

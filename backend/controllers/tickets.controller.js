@@ -266,7 +266,11 @@ exports.assignTicket = async (req, res) => {
       return res.status(403).json({ success: false, message: 'Access denied: only staff or admin can assign tickets.' });
     }
 
-    ticket.status = 'In Progress';
+    // เปลี่ยน status เป็น "In Progress" เฉพาะเมื่อ ticket ยังเป็น "Open" อยู่
+    // ถ้า ticket เป็น status อื่นแล้ว (เช่น Resolved, Closed) ไม่ต้องเปลี่ยน
+    if (ticket.status === 'Open') {
+      ticket.status = 'In Progress';
+    }
     ticket.updated_at = new Date();
     await ticket.save();
 
@@ -396,36 +400,6 @@ exports.getTicketsByPriority = async (req, res) => {
 
 exports.exportTickets = async (req, res) => {
   try {
-    if (req.user.role_id !== 3) { // ✅ เฉพาะ admin
-      return res.status(403).json({ message: "Access denied: only admin can export." });
-    }
-
-    const tickets = await Ticket.findAll({
-      include: [{ model: User, as: 'creator', attributes: ['name', 'email'] }],
-      raw: true,
-      nest: true
-    });
-
-    const fields = ['ticket_id', 'title', 'description', 'priority', 'status', 'creator.name', 'creator.email', 'createdAt'];
-    const json2csv = new Parser({ fields });
-    const csv = json2csv.parse(tickets);
-
-    const filePath = path.join(__dirname, '..', 'exports', `tickets_${Date.now()}.csv`);
-    fs.mkdirSync(path.dirname(filePath), { recursive: true });
-    fs.writeFileSync(filePath, csv);
-
-    res.download(filePath, 'tickets_export.csv', (err) => {
-      if (err) console.error('Download error:', err);
-      fs.unlinkSync(filePath); // ลบหลังโหลดเสร็จ
-    });
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Server error while exporting tickets" });
-  }
-};
-
-exports.exportTickets = async (req, res) => {
-  try {
     if (req.user.role_id !== 3) return res.status(403).json({ message: "Access denied" });
 
     const tickets = await Ticket.findAll({
@@ -481,5 +455,198 @@ exports.exportTickets = async (req, res) => {
   } catch (err) {
     console.error(err);
     res.status(500).json({ message: "Export failed" });
+  }
+};
+
+// GET /tickets/report - ดึงข้อมูล report จาก tickets รวมถึง assigned tickets
+exports.getReport = async (req, res) => {
+  try {
+    const { period = 'Last 7 days' } = req.query;
+    
+    // คำนวณวันที่เริ่มต้นตาม period
+    let startDate = new Date();
+    if (period === 'Last 7 days') {
+      startDate.setDate(startDate.getDate() - 7);
+    } else if (period === 'Last 30 days') {
+      startDate.setDate(startDate.getDate() - 30);
+    } else if (period === 'Last 90 days') {
+      startDate.setDate(startDate.getDate() - 90);
+    }
+    startDate.setHours(0, 0, 0, 0);
+
+    // ดึง tickets ทั้งหมดที่สร้างในช่วงเวลาที่กำหนด (รวมถึง assigned tickets)
+    const tickets = await Ticket.findAll({
+      where: {
+        created_at: {
+          [Op.gte]: startDate
+        }
+      },
+      include: [
+        { model: User, as: 'assignee', attributes: ['user_id', 'name', 'email'] }
+      ],
+      order: [['created_at', 'DESC']]
+    });
+
+    // คำนวณสถิติ
+    const totalTickets = tickets.length;
+    
+    // นับตาม status
+    const statusCounts = {
+      'Open': 0,
+      'In Progress': 0,
+      'Resolved': 0,
+      'Closed': 0
+    };
+    
+    tickets.forEach(ticket => {
+      const status = ticket.status;
+      if (statusCounts.hasOwnProperty(status)) {
+        statusCounts[status]++;
+      }
+    });
+
+    // นับตาม priority
+    const priorityCounts = {
+      'Low': 0,
+      'Medium': 0,
+      'High': 0
+    };
+    
+    tickets.forEach(ticket => {
+      const priority = ticket.priority;
+      if (priorityCounts.hasOwnProperty(priority)) {
+        priorityCounts[priority]++;
+      }
+    });
+
+    // นับ tickets ที่ถูก assign
+    const assignedTickets = tickets.filter(t => t.assigned_to !== null).length;
+    const openTickets = statusCounts['Open'];
+    const resolvedTickets = statusCounts['Resolved'];
+    const closedTickets = statusCounts['Closed'];
+
+    // คำนวณ tickets ตามวันที่ (สำหรับกราฟ Over Time)
+    let timeLabels = [];
+    let timeData = [];
+    
+    if (period === 'Last 7 days') {
+      // สำหรับ 7 วัน: แสดงแต่ละวันตามวันที่จริง
+      const dayMap = new Map();
+      const endDate = new Date();
+      endDate.setHours(23, 59, 59, 999);
+      
+      // สร้าง array สำหรับแต่ละวันใน 7 วันล่าสุด
+      for (let i = 0; i < 7; i++) {
+        const date = new Date(endDate);
+        date.setDate(date.getDate() - (6 - i)); // เริ่มจาก 6 วันก่อน ถึงวันนี้
+        const dateKey = date.toISOString().split('T')[0]; // YYYY-MM-DD
+        const dateLabel = date.toLocaleDateString('en-US', { weekday: 'short', month: 'short', day: 'numeric' });
+        dayMap.set(dateKey, { count: 0, label: dateLabel });
+        timeLabels.push(dateLabel);
+      }
+      
+      // นับ tickets ตามวันที่จริง
+      tickets.forEach(ticket => {
+        const ticketDate = new Date(ticket.created_at);
+        const dateKey = ticketDate.toISOString().split('T')[0];
+        if (dayMap.has(dateKey)) {
+          dayMap.get(dateKey).count++;
+        }
+      });
+      
+      timeData = timeLabels.map(label => {
+        for (const [key, value] of dayMap.entries()) {
+          if (value.label === label) {
+            return value.count;
+          }
+        }
+        return 0;
+      });
+    } else {
+      // สำหรับ 30 หรือ 90 วัน: แสดงตามวันในสัปดาห์ (Mon-Sun)
+      const dayLabels = ['Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat', 'Sun'];
+      const dayCounts = [0, 0, 0, 0, 0, 0, 0];
+      
+      tickets.forEach(ticket => {
+        const date = new Date(ticket.created_at);
+        const dayOfWeek = date.getDay(); // 0 = Sunday, 1 = Monday, etc.
+        // แปลงเป็น index ของ array (Monday = 0)
+        const index = dayOfWeek === 0 ? 6 : dayOfWeek - 1;
+        if (index >= 0 && index < 7) {
+          dayCounts[index]++;
+        }
+      });
+      
+      timeLabels = dayLabels;
+      timeData = dayCounts;
+    }
+
+    // คำนวณเปอร์เซ็นต์การเปลี่ยนแปลง (เปรียบเทียบกับช่วงก่อนหน้า)
+    const previousStartDate = new Date(startDate);
+    const previousEndDate = new Date(startDate);
+    if (period === 'Last 7 days') {
+      previousStartDate.setDate(previousStartDate.getDate() - 7);
+    } else if (period === 'Last 30 days') {
+      previousStartDate.setDate(previousStartDate.getDate() - 30);
+    } else if (period === 'Last 90 days') {
+      previousStartDate.setDate(previousStartDate.getDate() - 90);
+    }
+
+    const previousTickets = await Ticket.count({
+      where: {
+        created_at: {
+          [Op.gte]: previousStartDate,
+          [Op.lt]: previousEndDate
+        }
+      }
+    });
+
+    const totalChange = previousTickets > 0 
+      ? `+${Math.round(((totalTickets - previousTickets) / previousTickets) * 100)}%`
+      : '+0%';
+
+    const resolvedChange = previousTickets > 0
+      ? `+${Math.round(((resolvedTickets - previousTickets) / previousTickets) * 100)}%`
+      : '+0%';
+
+    // ส่งข้อมูลกลับ
+    res.json({
+      stats: {
+        totalTickets,
+        totalChange,
+        openTickets,
+        openSubtitle: "Needs attention",
+        resolved: resolvedTickets,
+        resolvedChange,
+        closed: closedTickets,
+        closedSubtitle: "Completed"
+      },
+      statusChart: {
+        labels: ["Open", "In Progress", "Resolved", "Closed"],
+        data: [
+          statusCounts['Open'],
+          statusCounts['In Progress'],
+          statusCounts['Resolved'],
+          statusCounts['Closed']
+        ],
+        colors: ["#3b82f6", "#f59e0b", "#22c55e", "#6b7280"]
+      },
+      priorityChart: {
+        labels: ["Low", "Medium", "High"],
+        data: [
+          priorityCounts['Low'],
+          priorityCounts['Medium'],
+          priorityCounts['High']
+        ]
+      },
+      timeChart: {
+        labels: timeLabels,
+        data: timeData
+      },
+      assignedTickets: assignedTickets
+    });
+  } catch (err) {
+    console.error('Error in getReport:', err);
+    res.status(500).json({ message: 'Server error', error: err.message });
   }
 };
