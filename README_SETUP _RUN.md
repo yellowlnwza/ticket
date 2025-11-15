@@ -55,7 +55,7 @@ IT-SUPPORT_TICKET/
 |       |   ├── ReportAdmin.jsx
 |       |   ├── SubNewTicket.jsx
 |       |   ├── SystemSetting.jsx
-|       |   └──icketDetail.jsx
+|       |   └── TicketDetail.jsx
 |       ├── services/
 |       |   └── api.js
 |       ├── App.jsx
