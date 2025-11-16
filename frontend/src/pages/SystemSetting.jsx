@@ -1,7 +1,7 @@
 import React, { useState } from "react";
 import { ChevronDown, Plus, Trash2 } from "lucide-react";
 
-// --- (Helper Component) Toggle Switch (ใช้ซ้ำๆ) ---
+// ---  Toggle Switch---
 const ToggleSwitch = ({ id, name, checked, onChange, label }) => (
   <label htmlFor={id || name} className="relative inline-flex items-center cursor-pointer">
     <input
@@ -17,7 +17,7 @@ const ToggleSwitch = ({ id, name, checked, onChange, label }) => (
   </label>
 );
 
-// --- (Helper Component) Priority Tag (จากดีไซน์ Priorities) ---
+// --- Priority Tag  ---
 const PriorityTag = ({ priority }) => {
   const styles = {
     Low: "bg-green-100 text-green-700",
@@ -28,8 +28,7 @@ const PriorityTag = ({ priority }) => {
 };
 
 
-// --- (1) Tab "General" (ที่เราทำเสร็จแล้ว) ---
-// (ย้าย State เข้ามาไว้ข้างใน)
+// ---  "General" ---
 const GeneralSettings = () => {
   const [settings, setSettings] = useState({
     systemName: "IT Support Ticket System",
@@ -108,7 +107,7 @@ const GeneralSettings = () => {
 };
 
 
-// --- (2) (ใหม่) Tab "Notifications" ---
+// --- Tab "Notifications" ---
 const NotificationSettings = () => {
   const [toggles, setToggles] = useState({
     emailNotifications: true,
@@ -169,7 +168,7 @@ const NotificationSettings = () => {
 };
 
 
-// --- (3) (ใหม่) Tab "Priorities" ---
+// --- Tab "Priorities" ---
 const PrioritySettings = () => {
   const [priorities, setPriorities] = useState([
     { id: 1, name: "Low", responseTime: "48 hours", enabled: true, tag: "Low" },
@@ -366,7 +365,7 @@ const SecuritySettings = () => {
 };
 
 
-// --- (Main) Component "SystemSettings" ---
+// --- Component "SystemSettings" ---
 export default function SystemSettings() {
   const [activeTab, setActiveTab] = useState("General");
   const tabs = ["General", "Notifications", "Priorities", "Security"];
@@ -379,7 +378,7 @@ export default function SystemSettings() {
         <p className="text-gray-500">Configure system-wide settings and preferences</p>
       </div>
 
-      {/* --- (ปรับปรุง) แถบ TABS (มีขอบขาว) --- */}
+      {/* ---  แถบ TABS  --- */}
       <div className="bg-white rounded-lg shadow-sm mb-6 overflow-x-auto">
         <nav className="flex p-1 space-x-1">
           {tabs.map(tab => (
@@ -399,7 +398,7 @@ export default function SystemSettings() {
         </nav>
       </div>
 
-      {/* --- (ปรับปรุง) ส่วนเนื้อหา (Content) ที่เปลี่ยนตาม Tab --- */}
+      {/* --- ส่วนเนื้อหา (Content)  --- */}
       <div className="bg-white rounded-lg shadow-sm">
         {activeTab === 'General' && (
           <GeneralSettings />

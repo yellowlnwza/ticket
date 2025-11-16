@@ -1,14 +1,12 @@
 import React, { useState, useEffect } from "react";
 
-// (จำลอง) API Call
-// คุณต้องสร้าง API Endpoint จริงสำหรับดึง/อัปเดตข้อมูล Profile
 const fetchUserProfile = async (token) => {
-  // 1. Decode token เพื่อเอา ID หรือ Email
+
   const payload = JSON.parse(atob(token.split(".")[1]));
-  // 2. (จำลอง) สมมติว่า API ดึงข้อมูลนี้กลับมา
+
   return {
     name: payload.name || "Admin User",
-    email: payload.email || "admin@example.com", // (Token อาจไม่มี Email)
+    email: payload.email || "admin@example.com", 
     role_id: payload.role_id || 3,
     accountId: "1",
     memberSince: "2025-01-15T10:00:00Z",
@@ -25,7 +23,7 @@ const updateUserProfile = async (profileData) => {
 const updateUserPassword = async (passwordData) => {
   console.log("Changing Password:", passwordData);
   // (API call to update password)
-  // ที่นี่คุณต้องเช็ค Current Password กับ Backend
+  // ที่นี่ต้องเช็ค Current Password กับ Backend
   return { status: "success" };
 };
 

@@ -4,7 +4,7 @@ import { ChevronDown } from 'lucide-react';
 import { createTicket } from '../services/api';
 
 
-// (สำคัญ) เปลี่ยนชื่อ Function ให้ตรงกับชื่อไฟล์
+
 export default function SubNewTicket() {
   const navigate = useNavigate();
   const [loading, setLoading] = useState(false);
@@ -44,13 +44,11 @@ export default function SubNewTicket() {
     <>
       {/* Header */}
       <div className="mb-6">
-        {/* (Breadcrumb - optional) */}
-        {/* <p className="text-sm text-gray-500 mb-1">Dashboard > Submit Ticket</p> */}
         <h1 className="text-2xl font-bold text-slate-800">Submit New Ticket</h1>
         <p className="text-gray-500">Create a new support ticket and our team will assist you</p>
       </div>
 
-      {/* --- (ใหม่) ฟอร์มสร้าง Ticket --- */}
+      {/* --- ฟอร์มสร้าง Ticket --- */}
       <div className="bg-white rounded-lg shadow-sm">
         <form onSubmit={handleSubmit}>
           <div className="p-6 space-y-5">

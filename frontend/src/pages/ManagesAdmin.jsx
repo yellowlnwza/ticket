@@ -33,19 +33,19 @@ const StatusTag = ({ status }) => {
 
 
 export default function ManagesAdmin() {
-  const [users, setUsers] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const [users, setUsers] = useState([]); // State: เก็บ "รายการผู้ใช้งาน" (Array of users) ที่ดึงมาจาก API
+  const [loading, setLoading] = useState(true); // State: เก็บสถานะการ "โหลดข้อมูล" (Loading Status) ค่าเริ่มต้นเป็น `true` เพื่อให้แสดง "กำลังโหลด..." ทันทีที่ Component เริ่มทำงาน
+  const [error, setError] = useState(null);  // State: เก็บ "ข้อผิดพลาด" (Error) หากการ fetch ข้อมูลล้มเหลว ค่าเริ่มต้นเป็น `null` (ยังไม่มี error)
 
-  // States สำหรับ Filters
-  const [searchTerm, setSearchTerm] = useState("");
-  const [roleFilter, setRoleFilter] = useState("All");
+  // States สำหรับ  Filters และ Search
+  const [searchTerm, setSearchTerm] = useState(""); // State: เก็บ "คำค้นหา" (Search Term) ที่ผู้ใช้พิมพ์ในช่อง search (เช่น ค้นหาชื่อ, email)
+  const [roleFilter, setRoleFilter] = useState("All"); // State: เก็บ "ตัวกรองสิทธิ์ผู้ใช้" (Role Filter) ค่าเริ่มต้นคือ "All" (แสดงทุก Role)
 
-  // ---  State สำหรับ Modal Add User ---
-  const [isModalOpen, setIsModalOpen] = useState(false);
-  const [isEditModalOpen, setIsEditModalOpen] = useState(false);
-  const [editingUser, setEditingUser] = useState(null);
-  
+  // ---  State สำหรับ สำหรับจัดการ Modal Pop-up ---
+  const [isModalOpen, setIsModalOpen] = useState(false); // State: เก็บสถานะการ "เปิด/ปิด" Modal สำหรับ "เพิ่ม" ผู้ใช้ใหม่ `true` = Modal เปิด, `false` = Modal ปิด
+  const [isEditModalOpen, setIsEditModalOpen] = useState(false); // State: เก็บสถานะการ "เปิด/ปิด" Modal สำหรับ "แก้ไข" ผู้ใช้
+  const [editingUser, setEditingUser] = useState(null);  // State: ใช้เก็บข้อมูลของ "ผู้ใช้ที่กำลังถูกแก้ไข" ค่าเริ่มต้นเป็น `null` (ยังไม่มีใครถูกเลือก)
+   
   // State สำหรับฟอร์มใน Modal
   const [newUser, setNewUser] = useState({
     name: "",

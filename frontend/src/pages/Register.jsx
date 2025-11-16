@@ -3,13 +3,11 @@ import { Link, useNavigate } from "react-router-dom";
 import { register } from "../services/api";
 
 export default function Register() {
-  // State จากโค้ดเดิมของคุณ
-  const [name, setName] = useState(""); // ใช้ 'name' เหมือนเดิม (UI Label คือ Full Name)
+  const [name, setName] = useState(""); 
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [loading, setLoading] = useState(false);
   
-  // State ใหม่ที่เพิ่มตาม UI
   const [role, setRole] = useState("");
   const [confirmPassword, setConfirmPassword] = useState("");
 
@@ -26,7 +24,7 @@ export default function Register() {
     
     setLoading(true);
     try {
-      // (อัปเดต) ส่ง 'role' เพิ่มเข้าไปในการเรียก API
+      // ส่ง 'role' เพิ่มเข้าไปในการเรียก API
       await register({ name, email, password, role });
       alert("สมัครสมาชิกสำเร็จ");
       navigate("/login"); // ไปหน้า login หลังสมัครเสร็จ

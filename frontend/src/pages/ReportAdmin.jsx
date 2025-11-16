@@ -21,7 +21,7 @@ import {
 } from "lucide-react";
 import { fetchReport } from '../services/api';
 
-// (สำคัญ) ลงทะเบียน Chart.js components
+//  ลงทะเบียน Chart.js components
 ChartJS.register(
   CategoryScale,
   LinearScale,
@@ -43,9 +43,9 @@ const fetchReportData = async (period) => {
     throw error;
   }
 };
-// --- จบ API Call ---
 
-// --- (ใหม่) Component กราฟ Status (สำหรับจอมือถือ) ---
+
+// ---  Component กราฟ Status (สำหรับจอมือถือ) ---
 const StatusChartMobileView = ({ data, colors, labels }) => {
   const total = data.reduce((acc, val) => acc + val, 0);
   const percentages = data.map(val => ((val / total) * 100).toFixed(0));
@@ -209,7 +209,7 @@ export default function ReportAdmin() {
         ))}
       </div>
 
-      {/* --- (ใหม่) ส่วนของ Charts (Responsive) --- */}
+      {/* --- ส่วนของ Charts (Responsive) --- */}
       <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
         
         {/* Chart 1: Tickets by Status */}

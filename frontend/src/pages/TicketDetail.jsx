@@ -1,5 +1,5 @@
 import React, { useEffect, useState, useCallback } from "react";
-import { useParams, Link } from "react-router-dom"; // (ลบ useNavigate, เพิ่ม useCallback)
+import { useParams, Link } from "react-router-dom"; 
 import {
   fetchTicket,
   assignTicket,
@@ -37,7 +37,6 @@ const StatusTag = ({ status }) => {
 
 export default function TicketDetail() {
   const { id } = useParams();
-  // (ลบ navigate)
   const [ticket, setTicket] = useState(null);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState(null);
@@ -65,7 +64,7 @@ export default function TicketDetail() {
         console.error("Token decode error:", err);
       }
     }
-  }, []); // <-- (วงเล็บว่าง = รันครั้งเดียว)
+  }, []); 
 
   // --- (Logic) โหลดข้อมูล Ticket (ใช้ useCallback) ---
   const loadTicket = useCallback(async () => {
@@ -122,7 +121,7 @@ export default function TicketDetail() {
     }
   };
   
-  // --- (Logic) Actions (ย้ายมาจากเวอร์ชันเก่า) ---
+  // --- (Logic) Actions  ---
   const handleAssignToMe = async () => {
     if (!userId) return alert("User ID not found.");
     try {
