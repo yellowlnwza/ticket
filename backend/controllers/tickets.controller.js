@@ -1,6 +1,5 @@
-// backend/controllers/tickets.controller.js
 const { Ticket, User, Comment, Notification } = require('../models');
-const { Sequelize, Op } = require('sequelize'); // ✅ เพิ่ม Op สำหรับ array filter
+const { Sequelize, Op } = require('sequelize'); //  เพิ่ม Op สำหรับ array filter
 const { Parser } = require('json2csv');
 const ExcelJS = require('exceljs');
 const fs = require('fs');
@@ -217,7 +216,7 @@ exports.updateTicketStatus = async (req, res) => {
     const { id } = req.params;
     const roleId = req.user.role_id;
 
-    // ✅ ให้เฉพาะ Staff (2) หรือ Admin (3) เท่านั้นที่อัปเดตได้
+    //  ให้เฉพาะ Staff (2) หรือ Admin (3) เท่านั้นที่อัปเดตได้
     if (roleId === 1) {
       return res.status(403).json({ success: false, message: 'Access denied: only staff or admin can update ticket status.' });
     }
@@ -228,7 +227,7 @@ exports.updateTicketStatus = async (req, res) => {
     ticket.status = status;
     await ticket.save();
 
-    // ✅ แจ้งเตือนเจ้าของ ticket
+    //  แจ้งเตือนเจ้าของ ticket
     await Notification.create({
       message: `สถานะของ Ticket #${id} ถูกเปลี่ยนเป็น "${status}"`,
       user_id: ticket.user_id,

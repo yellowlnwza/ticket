@@ -15,7 +15,6 @@ export default function Login() {
       const data = await login(email, password);
       localStorage.setItem("token", data.token);
       localStorage.setItem("user", data.user.name);
-      // Trigger custom event to notify App component about token change
       window.dispatchEvent(new Event('tokenChange'));
       navigate("/");
     } catch {

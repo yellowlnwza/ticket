@@ -8,7 +8,6 @@ const Comment = require('./comment')(sequelize);
 const Sla = require('./sla')(sequelize);
 const Notification = require('./notification')(sequelize, Sequelize.DataTypes);
 
-// Associations
 
 // Role - User
 Role.hasMany(User, { foreignKey: 'role_id' });

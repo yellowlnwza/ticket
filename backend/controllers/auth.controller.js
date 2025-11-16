@@ -3,7 +3,7 @@ const { User, Role } = require('../models');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 
-// ✅ ฟังก์ชันเข้าสู่ระบบ
+//  ฟังก์ชันเข้าสู่ระบบ
 exports.login = async (req, res) => {
   try {
     const { email, password } = req.body;
@@ -36,7 +36,7 @@ exports.login = async (req, res) => {
   }
 };
 
-// ✅ ฟังก์ชันสมัครสมาชิก (optional)
+//  ฟังก์ชันสมัครสมาชิก (optional)
 exports.register = async (req, res) => {
   try {
     const { name, email, password } = req.body;

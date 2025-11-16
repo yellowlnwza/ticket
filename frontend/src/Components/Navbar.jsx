@@ -12,7 +12,7 @@ import {
   Bell,
   Menu,
   X,
-  FileText, // (ใหม่) ไอคอนสำหรับ Reports
+  FileText, // ไอคอนสำหรับ Reports
 } from "lucide-react";
 
 export default function Navber({ children }) {
@@ -20,17 +20,17 @@ export default function Navber({ children }) {
   const location = useLocation();
   const token = localStorage.getItem("token");
 
-  // Logic เดิมสำหรับ Notifications
+  // Logic สำหรับ Notifications
   const [notifications, setNotifications] = useState([]);
   const [showDropdown, setShowDropdown] = useState(false);
   const [mobileOpen, setMobileOpen] = useState(false);
 
-  // --- (ใหม่) State สำหรับ User Info บน Header ---
+  // --- State สำหรับ User Info บน Header ---
   const [userName, setUserName] = useState("User");
   const [userRole, setUserRole] = useState("User");
   const [avatarInitial, setAvatarInitial] = useState("U"); // <--- State ใหม่สำหรับตัวย่อ
 
-  // --- (อัปเดต) Effect สำหรับดึง Notifications ---
+  // --- Effect สำหรับดึง Notifications ---
   useEffect(() => {
     if (!token) return;
     const fetchNotifications = async () => {
@@ -49,13 +49,13 @@ export default function Navber({ children }) {
     return () => clearInterval(interval);
   }, [token]);
 
-  // --- (อัปเดต) Effect สำหรับดึง User Info จาก Token ---
+  // ---  Effect สำหรับดึง User Info จาก Token ---
   useEffect(() => {
     if (token) {
       try {
         const payload = JSON.parse(atob(token.split(".")[1]));
 
-        // (อัปเดต) ตั้งค่า Role, Name, และ Avatar ตาม role_id
+        //  ตั้งค่า Role, Name, และ Avatar ตาม role_id
         if (payload.role_id === 3) {
           setUserName(payload.name || "Admin User");
           setUserRole("Administrator");
@@ -79,32 +79,33 @@ export default function Navber({ children }) {
     }
   }, [token]);
 
-  // --- Logic เดิม ---
+  // --- ฟังก์ชันจัดการการ Logout ---
   const handleLogout = () => {
-    localStorage.removeItem("token");
-    localStorage.removeItem("user");
-    // Trigger custom event to notify App component about token change
-    window.dispatchEvent(new Event('tokenChange'));
-    navigate("/login");
+    localStorage.removeItem("token"); // ลบ "token" (ที่ใช้ยืนยันตัวตน) ออกจาก Local Storage ของเบราว์เซอร์
+    localStorage.removeItem("user"); // ลบข้อมูล "user" (เช่น username, email) ออกจาก Local Storage
+    window.dispatchEvent(new Event('tokenChange')); 
+    // (เทคนิคขั้นสูง) สั่งให้ window ยิง custom event ชื่อ 'tokenChange' เพื่อให้ส่วนอื่นๆ ของแอป (เช่น Component ระดับบนสุดอย่าง App.jsx) ที่กำลัง "ดักฟัง" (listening) event นี้อยู่ รู้ตัวทันทีว่า token หายไปแล้ว และจะได้อัปเดต state (เช่น เปลี่ยน UI จาก "Logout" เป็น "Login")
+    navigate("/login"); // พาผู้ใช้กลับไปที่หน้า /login
   };
-
+ // --- ฟังก์ชันจัดการการ "อ่าน" แจ้งเตือน ---
   const handleRead = async (id) => {
     try {
       await axios.put(
-        `http://localhost:4000/api/notifications/${id}/read`,
-        {},
-        { headers: { Authorization: `Bearer ${token}` } }
-      );
-      setNotifications((prev) => prev.filter((n) => n.id !== id));
+        `http://localhost:4000/api/notifications/${id}/read`, // URL: ระบุ ID ของ notification ที่ต้องการอัปเดต
+        {}, // Body: ส่ง body ว่าง `{}` ไป (เพราะแค่ต้องการ trigger endpoint)
+        { headers: { Authorization: `Bearer ${token}` } }  // Headers: ส่ง token ไปใน Authorization header เพื่อยืนยันตัวตนว่า
+      ); 
+      setNotifications((prev) => prev.filter((n) => n.id !== id)); // (สำเร็จ) ถ้า API ด้านบนสำเร็จ (server ตอบ 2xx OK) ให้อัปเดต state `notifications` ในฝั่ง client ทันที
     } catch (err) {
-      console.error("Error marking notification as read:", err);
+      console.error("Error marking notification as read:", err); // (ล้มเหลว) ถ้า API ยิงไม่สำเร็จ ให้แสดง error ใน console (สำหรับ developer)
     }
   };
 
-  const hideNavbar = ["/login", "/register"].includes(location.pathname);
+  const hideNavbar = ["/login", "/register"].includes(location.pathname); // ตรวจสอบว่า path ปัจจุบันของเว็บ (location.pathname)
 
+  // ถ้า `hideNavbar` เป็น true (คือเราอยู่ในหน้า login หรือ register)
   if (hideNavbar) {
-    return <>{children}</>;
+    return <>{children}</>; // ให้ return (แสดงผล) แค่ {children} (ซึ่งก็คือตัว Page component) โดย "ไม่" แสดง Navbar
   }
 
   // --- (ใหม่) รายการเมนูสำหรับ Sidebar ---
@@ -124,7 +125,7 @@ export default function Navber({ children }) {
     { name: "Profile", href: "/ProfileStaff", icon: User,staffOnly: true },
   ];
   
-  // (ใหม่) กรองเมนูตาม Role (สมมติว่า admin คือ role "Administrator")
+  // กรองเมนูตาม Role (สมมติว่า admin คือ role "Administrator")
   const accessibleLinks = navLinks.filter(link => {
     if (link.adminOnly) {
         return userRole === "Administrator";
@@ -140,7 +141,6 @@ export default function Navber({ children }) {
 
   const SidebarContent = () => (
     <div className="flex flex-col h-full">
-      {/* Logo */}
       <div className="h-16 flex items-center justify-center px-4 border-b border-gray-200 flex-shrink-0">
         <Link to="/" className="flex items-center gap-3" onClick={() => mobileOpen && setMobileOpen(false)}>
           <div className="bg-blue-600 p-2 rounded-lg">
@@ -185,7 +185,7 @@ export default function Navber({ children }) {
     </div>
   );
 
-  // --- (อัปเดต) JSX Layout ทั้งหมด ---
+  // --- JSX Layout ทั้งหมด ---
   return (
     <div className="flex h-screen bg-gray-100 font-sans">
       {/* Mobile sidebar (Drawer) */}
@@ -279,7 +279,7 @@ export default function Navber({ children }) {
                 )}
               </div>
 
-              {/* User Info (ดีไซน์ใหม่) */}
+              {/* User Info  */}
               <div className="flex items-center">
                 <div className="text-right mr-3 hidden sm:block">
                   <div className="font-semibold text-sm text-slate-700">{userName}</div>

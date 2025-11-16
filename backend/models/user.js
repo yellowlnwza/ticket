@@ -18,6 +18,6 @@ module.exports = (sequelize) => {
     }
   }, {
     tableName: 'users',
-    timestamps: false // We handle created_at manually
+    timestamps: false // handle created_at 
   });
 };

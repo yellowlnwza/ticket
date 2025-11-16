@@ -4,16 +4,22 @@ import { fetchTicket, updateTicket } from "../services/api";
 import { ChevronRight } from "lucide-react";
 
 export default function EditTicket() {
-  const { id } = useParams();
-  const navigate = useNavigate();
-  const [ticket, setTicket] = useState(null);
-  const [loading, setLoading] = useState(false);
-  const [userRole, setUserRole] = useState("");
+  const { id } = useParams(); // `useParams` Hook: ดึง "id" (ของ Ticket) ออกมาจาก URL (เช่น ถ้า URL คือ /tickets/edit/123, `id` จะมีค่า "123")
+  const navigate = useNavigate(); // `useNavigate` Hook: เตรียมฟังก์ชัน `Maps` ไว้ใช้ (เช่น สั่งย้ายหน้ากลับไป /dashboard หลังจากแก้ไขสำเร็จ)
+  const [ticket, setTicket] = useState(null); // State: เก็บข้อมูล Ticket ที่กำลังจะแก้ไข ค่าเริ่มต้นเป็น `null` เพราะเราต้อง "ดึงข้อมูล" (fetch) มาก่อน
+  const [loading, setLoading] = useState(false); // State: เก็บสถานะการ "โหลด" (Loading) (คาดว่าจะใช้ตอน "กดปุ่ม Save/Submit" ไม่ใช่ตอนโหลดข้อมูลครั้งแรก)
+  const [userRole, setUserRole] = useState(""); // State: เก็บ "Role" (สิทธิ์) ของผู้ใช้ที่กำลัง login อยู่(คาดว่าจะใช้เพื่อจำกัดสิทธิ์ว่าใครแก้ไขส่วนไหนได้บ้าง เช่น user ทั่วไปอาจแก้ได้แค่ title, แต่ admin แก้ status ได้)
 
+  // --- Data Loading Function ---
+  /**
+   * ฟังก์ชันสำหรับดึงข้อมูล Ticket (ตาม `id` จาก URL) มาแสดงในฟอร์ม
+   * - ใช้ `useCallback` เพื่อ memoize (จดจำ) ฟังก์ชันนี้
+   * - ฟังก์ชันจะถูกสร้างใหม่ "ก็ต่อเมื่อ" `id` (จาก URL) เปลี่ยนไป
+   */
   const loadTicket = useCallback(async () => {
     try {
-      const data = await fetchTicket(id);
-      setTicket({
+      const data = await fetchTicket(id); // เรียก API (สมมติว่าชื่อ `fetchTicket`) เพื่อดึงข้อมูล
+      setTicket({ // (สำเร็จ) อัปเดต `ticket` state ด้วยข้อมูลที่ได้มา
         title: data.title || "",
         description: data.description || "",
         priority: data.priority || "Low",
@@ -21,9 +27,9 @@ export default function EditTicket() {
       });
     } catch (err) {
       console.error(err);
-      alert("ไม่พบ Ticket นี้");
+      alert("ไม่พบ Ticket นี้"); 
     }
-  }, [id]);
+  }, [id]); // <-- Dependency: ผูกกับ `id` จาก URL
 
   useEffect(() => {
     // decode token เพื่อดึง role

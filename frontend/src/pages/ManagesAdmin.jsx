@@ -31,7 +31,7 @@ const StatusTag = ({ status }) => {
 // --- จบ Helper Components ---
 
 
-// --- (สำคัญ) เปลี่ยนชื่อ Function ---
+
 export default function ManagesAdmin() {
   const [users, setUsers] = useState([]);
   const [loading, setLoading] = useState(true);
@@ -41,7 +41,7 @@ export default function ManagesAdmin() {
   const [searchTerm, setSearchTerm] = useState("");
   const [roleFilter, setRoleFilter] = useState("All");
 
-  // --- (สำคัญ) State สำหรับ Modal Add User ---
+  // ---  State สำหรับ Modal Add User ---
   const [isModalOpen, setIsModalOpen] = useState(false);
   const [isEditModalOpen, setIsEditModalOpen] = useState(false);
   const [editingUser, setEditingUser] = useState(null);

@@ -2,11 +2,12 @@ import React, { useState } from "react";
 import { useNavigate } from "react-router-dom";
 import { createTicket } from "../services/api";
 
+// ฟอร์มสำหรับ "สร้าง Ticket ใหม่"
 export default function CreateTicket() {
-  const [title, setTitle] = useState("");
-  const [description, setDescription] = useState("");
-  const [priority, setPriority] = useState("Low");
-  const navigate = useNavigate();
+  const [title, setTitle] = useState(""); // State: เก็บ "หัวข้อ" (Title) ของ Ticket ที่ผู้ใช้พิมพ์ ค่าเริ่มต้นเป็น "" (ว่างเปล่า)
+  const [description, setDescription] = useState(""); // State: เก็บ "รายละเอียด" (Description) ของ Ticket ที่ผู้ใช้พิมพ์ ค่าเริ่มต้นเป็น "" (ว่างเปล่า)
+  const [priority, setPriority] = useState("Low"); // State: เก็บ "ระดับความสำคัญ" (Priority) ที่ผู้ใช้เลือกค่าเริ่มต้นถูกกำหนดไว้ที่ "Low"
+  const navigate = useNavigate(); // เพื่อสั่ง "ย้ายหน้า" (redirect) ผู้ใช้หลังจากสร้าง Ticket สำเร็จ
 
   async function handleSubmit(e) {
     e.preventDefault();

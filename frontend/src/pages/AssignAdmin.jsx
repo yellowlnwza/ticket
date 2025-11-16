@@ -5,7 +5,6 @@ import {
   Search,
   ChevronDown,
   Eye, // ไอคอนดู
-  UserPlus, // ไอคอน Assign
   Ticket,
   Clock,
   CheckCircle,
@@ -30,6 +29,7 @@ const PriorityTag = ({ priority }) => {
   );
 };
 
+// ใช้สำหรับแสดง "ป้ายสถานะ" (Tag)
 const StatusTag = ({ status }) => {
   const styles = {
     Open: "bg-blue-100 text-blue-700",
@@ -37,7 +37,7 @@ const StatusTag = ({ status }) => {
     Resolved: "bg-green-100 text-green-700",
     Closed: "bg-gray-100 text-gray-700",
   };
-  return (
+  return ( // --- ส่วนการแสดงผล (JSX) ---
     <span
       className={`px-3 py-1 rounded-full text-xs font-medium ${
         styles[status] || "bg-gray-100 text-gray-700"
@@ -49,30 +49,33 @@ const StatusTag = ({ status }) => {
 };
 // --- จบ Helper Components ---
 
+// น่าจะเป็นหน้าที่สำหรับ "Admin" ใช้ในการ "มอบหมาย" (Assign) Ticket ต่างๆ ให้กับ Staff โดยหน้านี้จะมีการดึงข้อมูล Tickets และ Staff ทั้งหมดมาแสดง
 export default function AssignAdmin() {
-  const location = useLocation();
-  // const [stats] = useState({ totalTickets: 0, unassigned: 0, assigned: 0, criticalUnassigned: 0 }); // ❌ ลบตัวนี้
-  const [tickets, setTickets] = useState([]);
-  const [staffList, setStaffList] = useState([]);
-  const [loading, setLoading] = useState(true);
+  const location = useLocation(); // ใช้สำหรับดึงข้อมูลเกี่ยวกับ URL ปัจจุบัน (เช่น path, query params)
+  const [tickets, setTickets] = useState([]); // State: เก็บรายการ "Tickets" ทั้งหมดที่จะใช้แสดงในหน้านี้ ค่าเริ่มต้นเป็น Array ว่าง `[]`
+  const [staffList, setStaffList] = useState([]); // State: เก็บรายชื่อ "Staff" ทั้งหมด ใช้สำหรับแสดงใน Dropdown เพื่อเลือกคนที่จะมอบหมายงาน) ค่าเริ่มต้นเป็น Array ว่าง `[]`
+  const [loading, setLoading] = useState(true); // State: เก็บสถานะการ "โหลดข้อมูล" (Loading Status) ค่าเริ่มต้นเป็น `true` เพื่อให้หน้าจอแสดง "กำลังโหลด..."
   const [error, setError] = useState(null);
+  // State: เก็บ "ข้อผิดพลาด" (Error) ที่อาจเกิดขึ้นระหว่างการ fetch ข้อมูล
+  // ค่าเริ่มต้นเป็น `null` (ยังไม่มี error)
+  // หาก API ล้มเหลว, state นี้จะถูกตั้งค่าเป็นข้อความ Error เพื่อแสดงผล
   
   // States สำหรับ Filters
-  const [searchTerm, setSearchTerm] = useState("");
-  const [unassignedOnly, setUnassignedOnly] = useState(false); // เริ่มต้นเป็น "Unassigned Only"
-  const [priorityFilter, setPriorityFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  const [searchTerm, setSearchTerm] = useState(""); // State: เก็บ "คำค้นหา" (Search Term) ที่ผู้ใช้พิมพ์ในช่อง search
+  const [unassignedOnly, setUnassignedOnly] = useState(false); // เริ่มต้นเป็น "All Ticket Only"
+  const [priorityFilter, setPriorityFilter] = useState("All"); // State: เก็บ "ตัวกรองระดับความสำคัญ" (Priority Filter) ค่าเริ่มต้นคือ "All" (แสดงทุกระดับ)
+  const [statusFilter, setStatusFilter] = useState("All"); // State: เก็บ "ตัวกรองสถานะ" (Status Filter) ค่าเริ่มต้นคือ "All" (แสดงทุกสถานะ)
 
   // --- ดึงข้อมูลตอนเริ่ม ---
   const loadData = useCallback(async () => {
-    try {
+    try { // ตั้งสถานะเป็น "กำลังโหลด" (เพื่อแสดง spinner, disable ปุ่ม, ฯลฯ)
       setLoading(true);
-      const [ticketsData, staffData] = await Promise.all([
+      const [ticketsData, staffData] = await Promise.all([ // 1b. ดึงข้อมูล 2 ส่วนพร้อมกัน (parallel) โดยใช้ `Promise.all` เพื่อประสิทธิภาพ (ไม่ต้องรอ fetch ทีละอย่าง)
         fetchTickets(), // เรียก API จริง
         fetchStaffList().catch(() => []), // ดึง staff list (ถ้า error ให้เป็น array ว่าง)
       ]);
       
-      setStaffList(staffList,staffData);
+      setStaffList(staffList,staffData); // อัปเดต state ของ staffList ด้วยข้อมูลที่ดึงมา
 
       // แปลงข้อมูลให้ตรงกับ format ที่ใช้ใน component
       const formattedTickets = ticketsData.map((ticket) => {
@@ -81,8 +84,8 @@ export default function AssignAdmin() {
           ? staffData.find((s) => s.id === ticket.assigned_to || s.user_id === ticket.assigned_to)?.name ||
             "Unknown"
           : null;
-
-        return {
+          
+        return { // คืนค่าเป็น Object ใหม่ที่มีโครงสร้างที่ "Clean"
           id: ticket.id || ticket.ticket_id,
           ticket_id: `TKT-${ticket.id || ticket.ticket_id}`,
           subject: ticket.title,
@@ -90,22 +93,22 @@ export default function AssignAdmin() {
           description: ticket.description,
           priority: ticket.priority,
           status: ticket.status,
-          assigned_to: ticket.assigned_to, // user_id
-          assignee: assigneeName, // ✅ [FIXED] แก้ไขจาก ssigned
-          created_by: ticket.creator?.name || "Unknown",
-          updated_at: ticket.updated_at || ticket.created_at,
+          assigned_to: ticket.assigned_to, // เก็บ ID (user_id) เดิมไว้
+          assignee: assigneeName, 
+          created_by: ticket.creator?.name || "Unknown", // ดึงชื่อผู้สร้าง
+          updated_at: ticket.updated_at || ticket.created_at, // ใช้ updated ถ้ามี, ไม่งั้นใช้ created
           created_at: ticket.created_at,
         };
-      });
-      setTickets(formattedTickets);
-      setError(null);
+      }); // สิ้นสุด .map()
+      setTickets(formattedTickets); // อัปเดต Tickets ด้วยข้อมูลที่ "แปลง" แล้ว
+      setError(null); // ล้างค่า error เก่า (ถ้ามี) เพราะรอบนี้สำเร็จ
     } catch (err) {
       console.error("Failed to load user tickets:", err);
       setError("Failed to load tickets. Please try again.");
     } finally {
       setLoading(false);
     }
-  }, [staffList]); // Dependency array is empty because setters are stable and don't need to be in dependencies
+  }, [staffList]); // Dependency Array ของ useCallback
 
   useEffect(() => {
     loadData();
@@ -135,7 +138,7 @@ export default function AssignAdmin() {
       window.removeEventListener("ticketAssigned", handleTicketAssigned); // ✅ [FIXED] แก้ไขชื่อ Event
       window.removeEventListener("focus", handleFocus);
     };
-  }, [location.pathname, loadData]); // ✅ [FIXED] เพิ่ม loadData
+  }, [location.pathname, loadData]);
 
   // --- Logic การ Filter ---
   const filteredTickets = useMemo(() => {
@@ -163,7 +166,7 @@ export default function AssignAdmin() {
     });
   }, [tickets, searchTerm, unassignedOnly, priorityFilter, statusFilter]);
 
-  // --- 🌟 [IMPROVEMENT] Logic การคำนวณ Stats ---
+  // --- Logic การคำนวณ Stats ---
   const stats = useMemo(() => {
     const unassigned = tickets.filter((t) => !t.assigned_to).length;
     const criticalUnassigned = tickets.filter(
@@ -178,7 +181,7 @@ export default function AssignAdmin() {
     };
   }, [tickets]); // คำนวณใหม่ทุกครั้งที่ 'tickets' เปลี่ยน
 
-  // --- Stat Cards (ดีไซน์ใหม่) ---
+  // --- Stat Cards  ---
   const statCards = [
     {
       key: "totalTickets",

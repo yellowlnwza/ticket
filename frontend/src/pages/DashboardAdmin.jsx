@@ -34,21 +34,21 @@ const StatusTag = ({ status }) => {
   return <span className={`px-3 py-1 rounded-full text-xs font-medium ${styles[status]}`}>{status}</span>;
 };
 
-// --- (สำคัญ) เปลี่ยนชื่อ Function เป็น DashboardPage ---
+// --- เปลี่ยนชื่อ Function เป็น DashboardPage ---
 export default function DashboardAdmin() { 
 
-  const location = useLocation();
-  const [stats, setStats] = useState({ open: 0, inProgress: 0, resolved: 0, closed: 0 });
-  const [tickets, setTickets] = useState([]);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState(null);
+  const location = useLocation(); // ใช้สำหรับดึงข้อมูลเกี่ยวกับ URL ปัจจุบัน (เช่น path, search params)
+  const [stats, setStats] = useState({ open: 0, inProgress: 0, resolved: 0, closed: 0 }); // State: เก็บ "ข้อมูลสรุป" (Stats) หรือจำนวน Ticket ในแต่ละสถานะ ค่าเริ่มต้นเป็น Object ที่มีค่าเป็น 0 ทั้งหมด
+  const [tickets, setTickets] = useState([]); // State: เก็บ "รายการ Ticket" (Array) ที่ดึงมาจาก API 
+  const [loading, setLoading] = useState(true); // State: เก็บสถานะการ "โหลดข้อมูล" (Loading Status) ค่าเริ่มต้นเป็น `true` เพื่อให้แสดง "กำลังโหลด..." ทันทีที่ Component เริ่มทำงาน
+  const [error, setError] = useState(null);  // State: เก็บ "ข้อผิดพลาด" (Error) หากการ fetch ข้อมูลล้มเหลว ค่าเริ่มต้นเป็น `null` (ยังไม่มี error)
 
-  // States สำหรับ Filters
-  const [searchTerm, setSearchTerm] = useState("");
-  const [priorityFilter, setPriorityFilter] = useState("All");
-  const [statusFilter, setStatusFilter] = useState("All");
+  // States สำหรับ Filters 
+  const [searchTerm, setSearchTerm] = useState(""); // State: เก็บ "คำค้นหา" (Search Term) ที่ผู้ใช้พิมพ์ในช่อง search
+  const [priorityFilter, setPriorityFilter] = useState("All"); // State: เก็บ "ตัวกรองระดับความสำคัญ" (Priority Filter) ค่าเริ่มต้นคือ "All" (แสดงทุกระดับ)
+  const [statusFilter, setStatusFilter] = useState("All");  // State: เก็บ "ตัวกรองสถานะ" (Status Filter) ค่าเริ่มต้นคือ "All" (แสดงทุกสถานะ)
 
-  // --- (ใหม่) Stat Cards (ตามดีไซน์) ---
+  // --- Stat Cards ---
 
    useEffect(() => {
       const loadData = async () => {
@@ -113,7 +113,7 @@ export default function DashboardAdmin() {
     }, [tickets, searchTerm, statusFilter, priorityFilter]);
   
 
-  // Stat Cards (ตามดีไซน์ใหม่)
+  // Stat Cards 
   const statCards = [
     { key: "open", label: "Open Tickets", icon: <Ticket size={24} className="text-blue-500" /> },
     { key: "inProgress", label: "In Progress", icon: <Clock size={24} className="text-yellow-500" /> },
@@ -130,13 +130,13 @@ export default function DashboardAdmin() {
 
   return (
     <> 
-      {/* Dashboard Title (ตามดีไซน์ใหม่) */}
+      {/* Dashboard Title  */}
       <div className="mb-4">
         <h1 className="text-2xl font-bold text-slate-800">Support Dashboard</h1>
         <p className="text-gray-500">Manage and resolve support tickets</p>
       </div>
 
-      {/* Stat Cards (ดีไซน์ใหม่) */}
+      {/* Stat Cards  */}
       <div className="grid grid-cols-2 lg:grid-cols-4 gap-3 mb-6">
         {statCards.map((card) => (
           <div
@@ -154,7 +154,7 @@ export default function DashboardAdmin() {
         ))}
       </div>
 
-       {/* Filters (ดีไซน์ใหม่) */}
+       {/* Filters  */}
         <div className="flex flex-col sm:flex-row gap-2 mb-4">
           {/* Search */}
           <div className="relative flex-1">
@@ -248,7 +248,7 @@ export default function DashboardAdmin() {
           </table>
         </div>
 
-          {/* Mobile Card List (แสดงบนมือถือ - ตามดีไซน์) */}
+          {/* Mobile Card List (แสดงบนมือถือ) */}
           <div className="block md:hidden">
             {filteredTickets.map(ticket => (
               <div key={ticket.id} className="border-b p-4">
