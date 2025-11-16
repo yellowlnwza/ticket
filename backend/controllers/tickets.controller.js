@@ -397,65 +397,6 @@ exports.getTicketsByPriority = async (req, res) => {
   }
 };
 
-exports.exportTickets = async (req, res) => {
-  try {
-    if (req.user.role_id !== 3) return res.status(403).json({ message: "Access denied" });
-
-    const tickets = await Ticket.findAll({
-      include: [{ model: User, as: 'creator', attributes: ['name', 'email'] }],
-      raw: true,
-      nest: true,
-    });
-
-    const format = req.query.format || "csv";
-
-    if (format === "xlsx") {
-      const workbook = new ExcelJS.Workbook();
-      const sheet = workbook.addWorksheet("Tickets");
-
-      // header
-      sheet.columns = [
-        { header: "ID", key: "ticket_id", width: 10 },
-        { header: "Title", key: "title", width: 30 },
-        { header: "Description", key: "description", width: 50 },
-        { header: "Priority", key: "priority", width: 10 },
-        { header: "Status", key: "status", width: 15 },
-        { header: "Creator Name", key: "creator_name", width: 20 },
-        { header: "Creator Email", key: "creator_email", width: 25 },
-        { header: "Created At", key: "createdAt", width: 20 },
-      ];
-
-      tickets.forEach(t => {
-        sheet.addRow({
-          ...t,
-          creator_name: t.creator?.name,
-          creator_email: t.creator?.email,
-        });
-      });
-
-      res.setHeader(
-        "Content-Type",
-        "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-      );
-      res.setHeader("Content-Disposition", `attachment; filename="tickets_export.xlsx"`);
-
-      await workbook.xlsx.write(res);
-      res.end();
-    } else {
-      // CSV
-      const fields = ["ticket_id", "title", "description", "priority", "status", "creator.name", "creator.email", "createdAt"];
-      const json2csv = new Parser({ fields });
-      const csv = json2csv.parse(tickets);
-
-      res.setHeader("Content-Type", "text/csv");
-      res.setHeader("Content-Disposition", `attachment; filename="tickets_export.csv"`);
-      res.send(csv);
-    }
-  } catch (err) {
-    console.error(err);
-    res.status(500).json({ message: "Export failed" });
-  }
-};
 
 // GET /tickets/report - ดึงข้อมูล report จาก tickets รวมถึง assigned tickets
 exports.getReport = async (req, res) => {
