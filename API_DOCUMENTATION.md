@@ -1,4 +1,4 @@
-# 📚 API Documentation - IT Support Ticket System
+#  API Documentation - IT Support Ticket System
 
 เอกสารนี้อธิบาย API Endpoints ทั้งหมดของระบบ IT Support Ticket System
 
@@ -8,7 +8,7 @@
 
 ---
 
-## 📋 สารบัญ
+##  สารบัญ
 
 1. [Authentication APIs](#1-authentication-apis)
 2. [Tickets APIs](#2-tickets-apis)
@@ -19,7 +19,7 @@
 
 ---
 
-## 🔐 Authentication
+##  Authentication
 
 ### การยืนยันตัวตน
 
@@ -593,44 +593,7 @@ Authorization: Bearer {token}
 
 ---
 
-### 2.11 Export Tickets (Admin Only)
-
-Export ข้อมูล Tickets เป็น CSV หรือ Excel
-
-**Endpoint:** `GET /api/tickets/export`
-
-**Authentication:** Required
-
-**Permissions:** Admin (role_id = 3)
-
-**Query Parameters:**
-- `format` (optional): "csv" หรือ "xlsx" (default: "csv")
-
-**Example Requests:**
-```bash
-# Export เป็น CSV
-GET /api/tickets/export?format=csv
-
-# Export เป็น Excel
-GET /api/tickets/export?format=xlsx
-```
-
-**Success Response:**
-- Content-Type: `text/csv` หรือ `application/vnd.openxmlformats-officedocument.spreadsheetml.sheet`
-- ไฟล์จะถูก download โดยอัตโนมัติ
-
-**Error Responses:**
-
-**403 - Access Denied:**
-```json
-{
-  "message": "Access denied"
-}
-```
-
----
-
-### 2.12 ดูรายงาน (Report)
+### 2.11 ดูรายงาน (Report)
 
 ดูรายงานสถิติ Tickets พร้อมกราฟ
 
@@ -970,7 +933,7 @@ const ticketResponse = await fetch('http://localhost:4000/api/tickets', {
 
 ---
 
-## 📌 หมายเหตุ
+##  หมายเหตุ
 
 1. **Token Expiration:** JWT Token จะหมดอายุใน 8 ชั่วโมง
 2. **Rate Limiting:** จำกัด 100 requests ต่อ 15 นาที ต่อ IP
@@ -980,4 +943,4 @@ const ticketResponse = await fetch('http://localhost:4000/api/tickets', {
 ---
 
 **เวอร์ชัน:** 1.0.0  
-**Last Updated:** 16 พฤศจิกายน 2025
+**Last Updated:** 15 พฤศจิกายน 2025
